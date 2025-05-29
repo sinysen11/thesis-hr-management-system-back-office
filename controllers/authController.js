@@ -1,19 +1,26 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/userModel');
+const Department = require('../models/departments');
+const Position = require ('../models/positions');
 
 // Create User - Admin only
 exports.createUser = async (req, res) => {
   const {
-    name_kh,
-    name_en,
+    first_name_kh,
+    last_name_kh,
+    first_name_en,
+    last_name_en,
+    username,
     email,
     password,
     confirm_password,
     role,
     department,
+    position,
     phone_number,
-    gender
+    gender,
+    dob
   } = req.body;
 
   if (password !== confirm_password) {
@@ -25,22 +32,37 @@ exports.createUser = async (req, res) => {
     return res.status(400).json({ message: "User already exists" });
   }
 
+  const departmentData = await Department.findById(department);
+  if (!departmentData) {
+    return res.status(404).json({ message: "Department not found" });
+  }
+
+  const positionData = await Position.findById(position);
+  if (!positionData) {
+    return res.status(404).json({ message: "Position not found" });
+  }
+
   const hashedPassword = await bcrypt.hash(password, 10);
 
   const newUser = new User({
-    name_kh,
-    name_en,
+    first_name_kh,
+    last_name_kh,
+    first_name_en,
+    last_name_en,
     email,
+    username,
     password: hashedPassword,
     role,
-    department,
+    department: departmentData._id,
+    position: positionData._id,
     phone_number,
-    gender
+    gender,
+    dob
   });
 
   await newUser.save();
 
-  res.status(201).json({ message: "User created successfully" });
+  res.status(201).json({ status: 1, message: "User created successfully" });
 };
 
 // Login
@@ -69,10 +91,15 @@ exports.login = async (req, res) => {
     message: "Login successful",
     user: {
       id: user._id,
+      first_name_kh: user.first_name_kh,
+      last_name_en: user.last_name_en,
+      first_name_en: user.first_name_en,
+      last_name_en: user.last_name_en,
       email: user.email,
-      name_en: user.name_en,
       role: user.role,
       department: user.department,
+      position: user.position,
+      gender: user.gender,
       perminssions: []
     }
   });

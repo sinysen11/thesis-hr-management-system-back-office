@@ -5,7 +5,7 @@ const { verifyToken, requireRole } = require('../middlewares/authMiddleware');
 const router = express.Router();
 
 router.post('/login', authController.login);
-router.post('/create-user', verifyToken, requireRole('admin'), authController.createUser);
+router.post('/create-user', authController.createUser);
 
 router.get('/profile', verifyToken, (req, res) => {
   res.json({ message: 'Welcome to your profile', user: req.user });
