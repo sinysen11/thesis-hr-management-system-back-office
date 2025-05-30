@@ -1,6 +1,5 @@
-const LeaveType = require('../models/requestLeave');
+const LeaveType = require('../models/requestTypes');
 const User = require('../models/userModel');
-// CREATE
 exports.createLeaveType = async (req, res) => {
   try {
     const user_id = req?.user?.userId;
@@ -18,7 +17,6 @@ exports.createLeaveType = async (req, res) => {
   }
 };
 
-// READ ALL
 exports.getLeaveTypes = async (req, res) => {
   try {
     const leaveTypes = await LeaveType.find();
@@ -28,7 +26,6 @@ exports.getLeaveTypes = async (req, res) => {
   }
 };
 
-// READ ONE
 exports.getLeaveTypeById = async (req, res) => {
   try {
     const leaveType = await LeaveType.findById(req.params.id);
@@ -39,7 +36,6 @@ exports.getLeaveTypeById = async (req, res) => {
   }
 };
 
-// UPDATE
 exports.updateLeaveType = async (req, res) => {
   try {
     const leaveType = await LeaveType.findByIdAndUpdate(req.params.id, req.body, { new: true });
@@ -50,7 +46,6 @@ exports.updateLeaveType = async (req, res) => {
   }
 };
 
-// DELETE
 exports.deleteLeaveType = async (req, res) => {
   try {
     const leaveType = await LeaveType.findByIdAndDelete(req.params.id);

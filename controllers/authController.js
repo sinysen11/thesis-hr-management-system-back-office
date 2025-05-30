@@ -2,7 +2,9 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/userModel');
 const Department = require('../models/departments');
-const Position = require ('../models/positions');
+const Position = require('../models/positions');
+const LeaveBalance = require('../models/LeaveBalance');
+const LeaveType = require('../models/requestTypes');
 
 // Create User - Admin only
 exports.createUser = async (req, res) => {
@@ -60,7 +62,24 @@ exports.createUser = async (req, res) => {
     dob
   });
 
+  const leaveTypes = await LeaveType.find({ isActive: true });
+  const currentYear = new Date().getFullYear();
+
+  const leaveTypesArray = leaveTypes.map(type => ({
+    type: type._id,
+    balance: type.maxDaysPerYear,
+    code: type.code,
+    name: type.name,
+  }));
+
+  const leaveBalance = new LeaveBalance({
+    user: newUser._id,
+    year: currentYear,
+    type: leaveTypesArray
+  });
+
   await newUser.save();
+  await leaveBalance.save();
 
   res.status(201).json({ status: 1, message: "User created successfully" });
 };

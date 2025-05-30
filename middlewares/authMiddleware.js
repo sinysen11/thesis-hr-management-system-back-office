@@ -20,6 +20,14 @@ exports.verifyToken = (req, res, next) => {
 };
 
 exports.requireRole = (role) => {
+  const permissions = [];
+  if (role === 'admin') {
+    
+  } else if (role === 'manager') {
+    
+  } else if (role === 'staff') {
+
+  }
   return (req, res, next) => {
     if (!req.user || req.user.role !== role) {
       return res.status(403).json({ message: 'Access denied: insufficient permissions' });
