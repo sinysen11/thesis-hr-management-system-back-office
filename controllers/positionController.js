@@ -16,9 +16,9 @@ exports.createPosition = async (req, res) => {
 exports.getPositions = async (req, res) => {
   try {
     const positions = await Position.find();
-    res.json(positions);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.json({ positions, status: 200, message: 'get position successfully' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
 };
 
@@ -26,7 +26,8 @@ exports.getPositions = async (req, res) => {
 exports.getPositionById = async (req, res) => {
   try {
     const position = await Position.findById(req.params.id);
-    if (!position) return res.status(404).json({ message: 'Position not found' });
+    if (!position)
+      return res.status(404).json({ message: 'Position not found' });
     res.json(position);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -41,7 +42,8 @@ exports.updatePosition = async (req, res) => {
       req.body,
       { new: true, runValidators: true }
     );
-    if (!updatedPosition) return res.status(404).json({ message: 'Position not found' });
+    if (!updatedPosition)
+      return res.status(404).json({ message: 'Position not found' });
     res.json(updatedPosition);
   } catch (error) {
     res.status(400).json({ message: error.message });
@@ -52,7 +54,8 @@ exports.updatePosition = async (req, res) => {
 exports.deletePosition = async (req, res) => {
   try {
     const deletedPosition = await Position.findByIdAndDelete(req.params.id);
-    if (!deletedPosition) return res.status(404).json({ message: 'Position not found' });
+    if (!deletedPosition)
+      return res.status(404).json({ message: 'Position not found' });
     res.json({ message: 'Position deleted successfully' });
   } catch (error) {
     res.status(500).json({ message: error.message });

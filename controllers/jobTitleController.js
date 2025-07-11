@@ -14,7 +14,7 @@ exports.createJobTitle = async (req, res) => {
 // GET ALL
 exports.getAllJobTitles = async (req, res) => {
   try {
-    const jobs = await PostJob.find();
+    const jobs = await JobTitle.find();
     res.json({ jobs, status: 200, message: 'get jobs title successfully' });
   } catch (err) {
     res.status(500).json({ message: err.message });
