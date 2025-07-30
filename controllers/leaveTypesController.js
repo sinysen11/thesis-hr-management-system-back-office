@@ -1,26 +1,24 @@
-const LeaveType = require('../models/requestTypes');
-const User = require('../models/userModel');
+const LeaveType = require('../models/leaveTypes');
+
 exports.createLeaveType = async (req, res) => {
   try {
-    const user_id = req?.user?.userId;
-    const user = await User.findById(user_id);
-    console.log(user)
-    const { name } = req.body;
-    const existing = await LeaveType.findOne({ name: new RegExp(`^${name}$`, 'i') });
+    const existing = await LeaveType.findOne({ name: req.body.name });
     if (existing) {
-      return res.status(400).json({ message: 'Leave type already exists' });
+      return res.status(400).json({ status: -1, message: `Leave type "${req.body.name}" already exists.` });
     }
-    const leaveType = await LeaveType.create(req.body);
+
+    const leaveType = new LeaveType(req.body);
+    await leaveType.save();
     res.status(201).json(leaveType);
   } catch (err) {
     res.status(400).json({ message: err.message });
   }
 };
 
-exports.getLeaveTypes = async (req, res) => {
+exports.getAllLeaveTypes = async (req, res) => {
   try {
     const leaveTypes = await LeaveType.find();
-    res.status(200).json(leaveTypes);
+    res.json(leaveTypes);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -30,7 +28,7 @@ exports.getLeaveTypeById = async (req, res) => {
   try {
     const leaveType = await LeaveType.findById(req.params.id);
     if (!leaveType) return res.status(404).json({ message: 'Leave Type not found' });
-    res.status(200).json(leaveType);
+    res.json(leaveType);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -38,9 +36,9 @@ exports.getLeaveTypeById = async (req, res) => {
 
 exports.updateLeaveType = async (req, res) => {
   try {
-    const leaveType = await LeaveType.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const leaveType = await LeaveType.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
     if (!leaveType) return res.status(404).json({ message: 'Leave Type not found' });
-    res.status(200).json(leaveType);
+    res.json(leaveType);
   } catch (err) {
     res.status(400).json({ message: err.message });
   }
@@ -50,7 +48,7 @@ exports.deleteLeaveType = async (req, res) => {
   try {
     const leaveType = await LeaveType.findByIdAndDelete(req.params.id);
     if (!leaveType) return res.status(404).json({ message: 'Leave Type not found' });
-    res.status(200).json({ message: 'Leave Type deleted' });
+    res.json({ message: 'Leave Type deleted' });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

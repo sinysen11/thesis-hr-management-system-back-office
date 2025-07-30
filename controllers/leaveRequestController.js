@@ -1,62 +1,52 @@
-const LeaveRequest = require('../models/requestLeave');
-const LeaveBalance = require('../models/LeaveBalance');
-const LeaveType = require('../models/requestTypes');
-const User = require('../models/userModel');
-const mongoose = require('mongoose');
-
-exports.getLeaveOwnerByUser = async (req, res) => {
-    try {
-        const userId = req.user.userId;
-        const currentYear = new Date().getFullYear();
-
-        const leaveBalance = await LeaveBalance.findOne({ user: userId, year: currentYear })
-            .populate('leaveTypes.leaveType', 'name maxDaysPerYear code');
-
-        if (!leaveBalance) {
-            return res.status(404).json({ message: 'Leave balance not found' });
-        }
-
-        res.json({ status: 1, data: leaveBalance });
-    } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
-    }
-};
+const LeaveRequest = require('../models/LeaveRequest');
+const { subtractLeaveBalance, addLeaveBalance } = require('../utils/leaveBalanceUtils');
+const dayjs = require('dayjs');
 
 exports.createLeaveRequest = async (req, res) => {
-    try {
-        const { leaveType, start_date, until_date, return_date, reason, status } = req.body;
-        const userId = req.user.userId;
+  try {
+    const { user, type, fromDate, toDate } = req.body;
+    const start = dayjs(fromDate);
+    const end = dayjs(toDate);
+    const totalDays = end.diff(start, 'day') + 1;
 
-        const currentYear = new Date().getFullYear();
-
-        const type_of_request = await LeaveType.findById(leaveType);
-        const leave_max_data = await LeaveBalance.find(type_of_request.leaveType)
-        const start_dates = new Date(start_date);
-        const until_dates = new Date(until_date);
-
-        // Calculate difference in days
-        const diffInMs = until_dates.getTime() - start_dates.getTime();
-        const diffInDays = Math.ceil(diffInMs / (1000 * 60 * 60 * 24));
-
-        console.log("leaveTypes", req.body, "\n", leave_max_data)
-
-        // await leaveBalance.save();
-
-        // const newRequest = new LeaveRequest({
-        //   user: userId,
-        //   leaveType,
-        //   start_date,
-        //   until_date,
-        //   return_date,
-        //   reason,
-        //   totalDays,
-        //   status
-        // });
-
-        // await newRequest.save();
-
-        res.status(201).json({ status: 1, message: 'Leave request created successfully', data: newRequest });
-    } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
+    if (totalDays <= 0) {
+      return res.status(400).json({ message: 'Invalid date range' });
     }
+    const leaveRequest = await LeaveRequest.create({
+      user,
+      type,
+      fromDate,
+      toDate,
+      totalDays,
+      status: 'PENDING'
+    });
+
+    await subtractLeaveBalance(user, type, totalDays);
+
+    res.status(201).json({ message: 'Leave request submitted', leaveRequest });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+exports.updateLeaveStatus = async (req, res) => {
+  try {
+    const { request_id } = req.params;
+    const { status } = req.body;
+
+    const leaveRequest = await LeaveRequest.findById(request_id);
+    if (!leaveRequest) return res.status(404).json({ message: 'Leave request not found' });
+
+    const prevStatus = leaveRequest.status;
+    leaveRequest.status = status;
+    await leaveRequest.save();
+
+    if ((status === 'REJECTED' || status === 'CANCELLED') && prevStatus === 'PENDING') {
+      await addLeaveBalance(leaveRequest.user, leaveRequest.type, leaveRequest.totalDays);
+    }
+
+    res.status(200).json({ message: `Leave ${status.toLowerCase()}`, leaveRequest });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
 };

@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const leaveRequestController = require('../controllers/leaveRequestController');
+const leaveController = require('../controllers/leaveRequestController');
 
-router.get('/', leaveRequestController.getLeaveOwnerByUser);
-router.post('/', leaveRequestController.createLeaveRequest);
+router.post('/', leaveController.createLeaveRequest);
+router.patch('/:request_id/status', leaveController.updateLeaveStatus);
 
 module.exports = router;

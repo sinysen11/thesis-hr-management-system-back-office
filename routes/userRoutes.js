@@ -1,15 +1,14 @@
 const express = require('express');
-const authController = require('../controllers/authController');
-const { verifyToken, requireRole } = require('../middlewares/authMiddleware');
+const  usersController = require('../controllers/usersController');
+const leaveBalance = require('../controllers/leaveBalanceController');
 
 const router = express.Router();
 
-router.post('/login', authController.login);
-
-router.get('/admin', verifyToken, requireRole('admin'), (req, res) => {
-  res.json({ message: 'Welcome Admin!' });
-});
-
-router.post('/verify-token', verifyToken, authController.verifyTokenRoute);
+router.post('/create', usersController.createUser);
+router.get('/', usersController.getUsers);
+router.get('/:user_id', leaveBalance.getLeaveBalanceByUserId);
+router.get('/:id', usersController.getUserById);
+router.put('/:id', usersController.updateUser);
+router.delete('/:id', usersController.deleteUser);
 
 module.exports = router;

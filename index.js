@@ -21,9 +21,8 @@ const createDefaultAdmin = async () => {
       username: 'superadmin',
       email: 'super.admin@example.com',
       password: hashedPassword,
-      role: 'admin',
+      role: '688893de0a10f8446d1d78bc',
       department: '6836716319f5d7315fb5a517',
-      position: "6836716319f5d7315fb5a517",
       phone_number: '012345678',
       gender: 'male',
       dob: new Date('1990-01-01')
