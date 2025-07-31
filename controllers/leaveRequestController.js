@@ -75,7 +75,6 @@ exports.updateLeaveStatus = async (req, res) => {
 
       if (leaveBalance) {
         leaveBalance.type.totalDaysPerYear += totalDays;
-        console.log("leaveBalance.type.totalDaysPerYear += totalDays;", leaveBalance.type.totalDaysPerYear);
         await leaveBalance.save();
       }
     }
