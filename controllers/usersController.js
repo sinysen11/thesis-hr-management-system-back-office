@@ -23,15 +23,14 @@ exports.createUser = async (req, res) => {
         const user = await User.create(body);
 
         const leaveTypes = await LeaveType.find().lean();
-        const type_id = leaveTypes[0]._id;
         if (leaveTypes.length) {
             const balances = leaveTypes.map((item) => ({
                 userId: user._id,
                 year: new Date().getFullYear(),
-                type: type_id,
+                type: item._id,
                 total: item.totalDaysPerYear,
                 used: 0,
-                remainingDays: item.totalDaysPerYear,
+                balances: item.totalDaysPerYear,
             }));
 
             console.log("BALANCE: ", balances)

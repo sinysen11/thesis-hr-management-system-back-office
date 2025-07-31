@@ -3,6 +3,6 @@ const router = express.Router();
 const leaveController = require('../controllers/leaveRequestController');
 
 router.post('/', leaveController.createLeaveRequest);
-router.patch('/:request_id/status', leaveController.updateLeaveStatus);
+router.post('/:request_id', leaveController.updateLeaveStatus);
 
 module.exports = router;
