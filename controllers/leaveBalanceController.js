@@ -13,6 +13,6 @@ exports.getLeaveBalanceByUserId = async (req, res) => {
             status: 1
         });
     } catch (err) {
-        res.status(500).json({ message: err.message });
+        res.status(500).json({status: 0, message: err.message });
     }
 };

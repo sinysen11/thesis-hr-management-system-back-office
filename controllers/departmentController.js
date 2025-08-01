@@ -4,10 +4,10 @@ const Department = require('../models/departments');
 exports.createDepartment = async (req, res) => {
   try {
     const department = new Department(req.body);
-    const saved = await department.save();
-    res.status(201).json(saved);
+    const data = await department.save();
+    res.status(201).json({status: 1, message: "Successfully", data});
   } catch (err) {
-    res.status(400).json({ error: err.message });
+    res.status(400).json({status: 0,  error: err.message });
   }
 };
 
@@ -17,11 +17,11 @@ exports.getDepartments = async (req, res) => {
     const departments = await Department.find();
     res.json({
       departments,
-      status: 200,
+      status: 1,
       message: 'get Department successfully'
     });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({status: 0, message: err.message });
   }
 };
 
@@ -30,9 +30,9 @@ exports.getDepartmentById = async (req, res) => {
   try {
     const department = await Department.findById(req.params.id);
     if (!department) return res.status(404).json({ error: 'Not found' });
-    res.json(department);
+    res.json({status: 1, message: "Successfully", department});
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({status: 1, error: err.message });
   }
 };
 
@@ -47,10 +47,10 @@ exports.updateDepartment = async (req, res) => {
         runValidators: true
       }
     );
-    if (!updated) return res.status(404).json({ error: 'Not found' });
-    res.json(updated);
+    if (!updated) return res.status(404).json({status: -1,  error: 'Department not found' });
+    res.json({status: 1, message: "Successfully", updated});
   } catch (err) {
-    res.status(400).json({ error: err.message });
+    res.status(400).json({status: 0, error: err.message });
   }
 };
 
@@ -58,9 +58,9 @@ exports.updateDepartment = async (req, res) => {
 exports.deleteDepartment = async (req, res) => {
   try {
     const deleted = await Department.findByIdAndDelete(req.params.id);
-    if (!deleted) return res.status(404).json({ error: 'Not found' });
-    res.json({ message: 'Department deleted successfully' });
+    if (!deleted) return res.status(404).json({status: -1, error: 'Department not found' });
+    res.json({status: 1,  message: 'Department deleted successfully' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({status: 0, error: err.message });
   }
 };

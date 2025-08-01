@@ -6,11 +6,7 @@ const LeaveRequestSchema = new mongoose.Schema({
   fromDate: { type: Date, required: true },
   toDate: { type: Date, required: true },
   approver: { type: mongoose.Schema.Types.ObjectId, ref: 'User'},
-  status: {
-    type: String,
-    enum: ['PENDING', 'APPROVED', 'REJECTED', 'CANCELLED'],
-    default: 'PENDING',
-  },
+  status: { type: String },
 }, { timestamps: true });
 
 module.exports = mongoose.model('LeaveRequest', LeaveRequestSchema);

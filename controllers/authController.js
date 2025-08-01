@@ -6,15 +6,17 @@ const User = require('../models/userModel');
 exports.login = async (req, res) => {
   const { email, password } = req.body;
 
-  const user = await User.findOne({ email });
+  const user = await User.findOne({ email })
+  .populate("department")
+  .populate("role")
   
   if (!user) {
-    return res.status(400).json({ message: 'Invalid credentials' });
+    return res.status(400).json({status: -1, message: 'Invalid credentials' });
   }
 
   const isMatch = await bcrypt.compare(password, user.password);
   if (!isMatch) {
-    return res.status(400).json({ message: 'Invalid credentials' });
+    return res.status(400).json({status: 0, message: 'Invalid credentials' });
   }
 
   const token = jwt.sign(
@@ -25,19 +27,9 @@ exports.login = async (req, res) => {
 
   res.json({
     token,
-    status: '1',
+    status: 1,
     message: "Login successful",
-    user: {
-      id: user._id,
-      first_name_kh: user.first_name_kh,
-      last_name_en: user.last_name_en,
-      first_name_en: user.first_name_en,
-      last_name_en: user.last_name_en,
-      email: user.email,
-      role: user.role,
-      department: user.department,
-      gender: user.gender,
-    }
+    user: user
   });
 };
 

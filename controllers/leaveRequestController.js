@@ -1,5 +1,6 @@
 const LeaveRequest = require('../models/LeaveRequest');
 const LeaveBalance = require('../models/leaveBalance');
+const STATUS = require('../enums/leaveStatus');
 const mongoose = require('mongoose');
 
 exports.createLeaveRequest = async (req, res) => {
@@ -31,7 +32,7 @@ exports.createLeaveRequest = async (req, res) => {
       fromDate,
       toDate,
       approver,
-      status: 'PENDING'
+      status: STATUS.PENDING
     });
 
     await leaveRequest.save({ session });
@@ -67,7 +68,7 @@ exports.getLeaveRequests = async (req, res) => {
 
     res.status(200).json({status: 1, message: 'Successfully',  leaveRequests });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({status: 0, message: err.message });
   }
 };
 
@@ -79,15 +80,15 @@ exports.updateLeaveStatus = async (req, res) => {
 
     const leaveRequest = await LeaveRequest.findById(request_id).populate('type');
     if (!leaveRequest) {
-      return res.status(404).json({status: 0, message: 'Leave request not found' });
+      return res.status(404).json({status: -1, message: 'Leave request not found' });
     }
 
-    const status_pending = leaveRequest.status;
+    const isPending = leaveRequest.status === STATUS.PENDING;
     const totalDays = calculateLeaveDays(leaveRequest.fromDate, leaveRequest.toDate);
 
     leaveRequest.status = status;
 
-    if ((status === 'REJECTED' || status === 'CANCELLED') && status_pending === 'PENDING') {
+    if ((status === STATUS.REJECTED || status === STATUS.CANCELLED) && isPending) {
       const leaveBalance = await LeaveBalance.findOne({
         userId: leaveRequest.user,
         type: leaveRequest.type,

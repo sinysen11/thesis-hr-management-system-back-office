@@ -5,9 +5,9 @@ exports.createPostJob = async (req, res) => {
   try {
     const newJob = new PostJob(req.body);
     const savedJob = await newJob.save();
-    res.status(201).json(savedJob);
+    res.status(201).json({status: 1, message: "Successfully", savedJob});
   } catch (err) {
-    res.status(400).json({ message: err.message });
+    res.status(400).json({status: 0, message: err.message });
   }
 };
 
@@ -15,9 +15,9 @@ exports.createPostJob = async (req, res) => {
 exports.getAllPostJobs = async (req, res) => {
   try {
     const jobs = await PostJob.find();
-    res.json({ jobs, status: 200, message: 'get jobs successfully' });
+    res.json({ jobs, status: 1, message: 'get jobs successfully' });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({status: 0, message: err.message });
   }
 };
 
@@ -25,10 +25,10 @@ exports.getAllPostJobs = async (req, res) => {
 exports.getPostJobById = async (req, res) => {
   try {
     const job = await PostJob.findById(req.params.id);
-    if (!job) return res.status(404).json({ message: 'Job not found' });
-    res.json(job);
+    if (!job) return res.status(404).json({status: -1, message: 'Job not found' });
+    res.json({status: 1, message: "Successfully", job});
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({message: 0, message: err.message });
   }
 };
 
@@ -40,10 +40,10 @@ exports.updatePostJob = async (req, res) => {
       req.body,
       { new: true }
     );
-    if (!updatedJob) return res.status(404).json({ message: 'Job not found' });
-    res.json(updatedJob);
+    if (!updatedJob) return res.status(404).json({status: -1, message: 'Job not found' });
+    res.json({status: 1, message: "Successfully", updatedJob});
   } catch (err) {
-    res.status(400).json({ message: err.message });
+    res.status(400).json({status: 0, message: err.message });
   }
 };
 
@@ -51,9 +51,9 @@ exports.updatePostJob = async (req, res) => {
 exports.deletePostJob = async (req, res) => {
   try {
     const deletedJob = await PostJob.findByIdAndDelete(req.params.id);
-    if (!deletedJob) return res.status(404).json({ message: 'Job not found' });
-    res.json({ message: 'Job deleted' });
+    if (!deletedJob) return res.status(404).json({status: -1, message: 'Job not found' });
+    res.json({status: 1, message: 'Job deleted' });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({status: 0, message: err.message });
   }
 };

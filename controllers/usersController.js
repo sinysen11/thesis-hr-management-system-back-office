@@ -16,7 +16,7 @@ exports.createUser = async (req, res) => {
         const body = { ...req.body };
 
         if (!body.password) {
-            return res.status(400).json({ message: 'Password is required' });
+            return res.status(400).json({status: -1, message: 'Password is required' });
         }
         body.password = await bcrypt.hash(body.password, 10);
 
@@ -33,7 +33,6 @@ exports.createUser = async (req, res) => {
                 balances: item.totalDaysPerYear,
             }));
 
-            console.log("BALANCE: ", balances)
             if (!balances) return
             await LeaveBalance.insertMany(balances);
         }
@@ -45,9 +44,9 @@ exports.createUser = async (req, res) => {
         });
     } catch (err) {
         if (err?.code === 11000 && err?.keyPattern?.email) {
-            return res.status(400).json({ message: 'Email already in use' });
+            return res.status(400).json({status: 0, message: 'Email already in use' });
         }
-        res.status(400).json({ message: err.message });
+        res.status(400).json({status: 0, message: err.message });
     }
 };
 
@@ -88,7 +87,7 @@ exports.getUsers = async (req, res) => {
             message: "Successfully"
         });
     } catch (err) {
-        res.status(500).json({ message: err.message });
+        res.status(500).json({satus: 0, message: err.message });
     }
 };
 
@@ -101,7 +100,7 @@ exports.getUserById = async (req, res) => {
             .populate('department')
 
         if (!user) return res.status(404).json({ message: 'User not found' });
-        res.json(user);
+        res.json({status: 1, message: "Successfully", user});
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
@@ -124,17 +123,18 @@ exports.updateUser = async (req, res) => {
             .populate('role')
             .populate('department')
 
-        if (!user) return res.status(404).json({ message: 'User not found' });
+        if (!user) return res.status(404).json({status: -1, message: 'User not found' });
 
         res.json({
+            status: 1,
             message: 'User updated successfully',
             user: stripPassword(user),
         });
     } catch (err) {
         if (err?.code === 11000 && err?.keyPattern?.email) {
-            return res.status(400).json({ message: 'Email already in use' });
+            return res.status(400).json({status: 0, message: 'Email already in use' });
         }
-        res.status(400).json({ message: err.message });
+        res.status(400).json({status: 0, message: err.message });
     }
 };
 
@@ -142,12 +142,12 @@ exports.updateUser = async (req, res) => {
 exports.deleteUser = async (req, res) => {
     try {
         const user = await User.findByIdAndDelete(req.params.id).select('-password');
-        if (!user) return res.status(404).json({ message: 'User not found' });
+        if (!user) return res.status(404).json({status: -1, message: 'User not found' });
 
         await LeaveBalance.deleteMany({ user: user._id });
 
-        res.json({ message: 'User deleted successfully' });
+        res.json({status: 1, message: 'User deleted successfully' });
     } catch (err) {
-        res.status(500).json({ message: err.message });
+        res.status(500).json({status: 0, message: err.message });
     }
 };

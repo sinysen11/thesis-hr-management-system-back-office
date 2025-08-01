@@ -9,7 +9,7 @@ exports.createRole = async (req, res) => {
     await role.save();
     res.status(201).json({status: 1, message: "Role Created Successfully", role});
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    res.status(400).json({status: 0, message: error.message });
   }
 };
 
@@ -19,7 +19,7 @@ exports.getRoles = async (req, res) => {
     const roles = await Role.find();
     res.json({ status: 1, message: "Successfully", roles });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({status: 0, message: error.message });
   }
 };
 
@@ -27,10 +27,10 @@ exports.getRoles = async (req, res) => {
 exports.getRoleById = async (req, res) => {
   try {
     const role = await Role.findById(req.params.id);
-    if (!role) return res.status(404).json({ message: 'Role not found' });
+    if (!role) return res.status(404).json({status: -1, message: 'Role not found' });
     res.json({status : 1, message: "Successfully", role});
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({status: 0, message: error.message });
   }
 };
 
@@ -43,10 +43,10 @@ exports.updateRole = async (req, res) => {
       { name, permissions },
       { new: true, runValidators: true }
     );
-    if (!role) return res.status(404).json({ message: 'Role not found' });
+    if (!role) return res.status(404).json({status: -1, message: 'Role not found' });
     res.json({status: 1, message: "Successfully", role});
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    res.status(400).json({status: 0, message: error.message });
   }
 };
 
@@ -54,9 +54,9 @@ exports.updateRole = async (req, res) => {
 exports.deleteRole = async (req, res) => {
   try {
     const role = await Role.findByIdAndDelete(req.params.id);
-    if (!role) return res.status(404).json({ message: 'Role not found' });
-    res.json({ message: 'Role deleted successfully', status: 1 });
+    if (!role) return res.status(404).json({status: -1, message: 'Role not found' });
+    res.json({ message: 'Role deleted successfully', status: 1, role });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({status: 0, message: error.message });
   }
 };
