@@ -39,6 +39,7 @@ exports.createUser = async (req, res) => {
         }
 
         res.status(201).json({
+            status: 1,
             message: 'User created successfully',
             user: stripPassword(user),
         });

@@ -17,7 +17,7 @@ exports.createRole = async (req, res) => {
 exports.getRoles = async (req, res) => {
   try {
     const roles = await Role.find();
-    res.json(roles);
+    res.json({ status: 1, message: "Successfully", roles });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -28,7 +28,7 @@ exports.getRoleById = async (req, res) => {
   try {
     const role = await Role.findById(req.params.id);
     if (!role) return res.status(404).json({ message: 'Role not found' });
-    res.json(role);
+    res.json({status : 1, message: "Successfully", role});
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -44,7 +44,7 @@ exports.updateRole = async (req, res) => {
       { new: true, runValidators: true }
     );
     if (!role) return res.status(404).json({ message: 'Role not found' });
-    res.json(role);
+    res.json({status: 1, message: "Successfully", role});
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
@@ -55,7 +55,7 @@ exports.deleteRole = async (req, res) => {
   try {
     const role = await Role.findByIdAndDelete(req.params.id);
     if (!role) return res.status(404).json({ message: 'Role not found' });
-    res.json({ message: 'Role deleted successfully' });
+    res.json({ message: 'Role deleted successfully', status: 1 });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
