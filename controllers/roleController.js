@@ -37,10 +37,10 @@ exports.getRoleById = async (req, res) => {
 // Update Role
 exports.updateRole = async (req, res) => {
   try {
-    const { name, description, permissions } = req.body;
+    const { name, permissions } = req.body;
     const role = await Role.findByIdAndUpdate(
       req.params.id,
-      { name, description, permissions },
+      { name, permissions },
       { new: true, runValidators: true }
     );
     if (!role) return res.status(404).json({ message: 'Role not found' });
