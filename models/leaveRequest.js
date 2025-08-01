@@ -5,7 +5,7 @@ const LeaveRequestSchema = new mongoose.Schema({
   type: { type: mongoose.Schema.Types.ObjectId, ref: 'LeaveType', required: true },
   fromDate: { type: Date, required: true },
   toDate: { type: Date, required: true },
-  approver: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true},
+  approver: { type: mongoose.Schema.Types.ObjectId, ref: 'User'},
   status: {
     type: String,
     enum: ['PENDING', 'APPROVED', 'REJECTED', 'CANCELLED'],

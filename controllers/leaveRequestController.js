@@ -39,7 +39,7 @@ exports.createLeaveRequest = async (req, res) => {
     await session.commitTransaction();
     session.endSession();
 
-    res.status(201).json({ message: 'Leave request created', leaveRequest });
+    res.status(201).json({status: 1, message: 'Leave request created', leaveRequest });
   } catch (error) {
     await session.abortTransaction();
     session.endSession();
@@ -47,10 +47,30 @@ exports.createLeaveRequest = async (req, res) => {
   }
 };
 
-function calculateLeaveDays(from, to) {
-  const oneDay = 24 * 60 * 60 * 1000;
-  return Math.round((new Date(to) - new Date(from)) / oneDay) + 1;
-}
+exports.getLeaveRequests = async (req, res) => {
+  try {
+    const { user_id } = req.query;
+    const filter = {};
+
+    if (user_id) {
+      filter.$or = [
+        { user: user_id },
+        { approver: user_id }
+      ];
+    }
+
+    const leaveRequests = await LeaveRequest.find(filter)
+      .populate('user')
+      .populate('type')
+      .populate('approver')
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({status: 1, message: 'Successfully',  leaveRequests });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
 
 exports.updateLeaveStatus = async (req, res) => {
   try {
@@ -59,7 +79,7 @@ exports.updateLeaveStatus = async (req, res) => {
 
     const leaveRequest = await LeaveRequest.findById(request_id).populate('type');
     if (!leaveRequest) {
-      return res.status(404).json({ message: 'Leave request not found' });
+      return res.status(404).json({status: 0, message: 'Leave request not found' });
     }
 
     const status_pending = leaveRequest.status;
@@ -79,9 +99,14 @@ exports.updateLeaveStatus = async (req, res) => {
       }
     }
     await leaveRequest.save();
-    res.status(200).json({ message: `Leave ${status.toLowerCase()}`, leaveRequest });
+    res.status(200).json({status: 1, message: `Leave ${status.toLowerCase()}`, leaveRequest });
 
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({status: 0, message: err.message });
   }
 };
+
+function calculateLeaveDays(from, to) {
+  const oneDay = 24 * 60 * 60 * 1000;
+  return Math.round((new Date(to) - new Date(from)) / oneDay) + 1;
+}
