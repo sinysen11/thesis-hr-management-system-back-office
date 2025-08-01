@@ -87,7 +87,7 @@ exports.getUsers = async (req, res) => {
             message: "Successfully"
         });
     } catch (err) {
-        res.status(500).json({satus: 0, message: err.message });
+        res.status(500).json({status: 0, message: err.message });
     }
 };
 
