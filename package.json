@@ -20,6 +20,7 @@
   },
   "homepage": "https://github.com/sinysen11/thesis-hr-management-system-back-office#readme",
   "dependencies": {
+    "bcrypt": "^6.0.0",
     "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
     "dayjs": "^1.11.13",

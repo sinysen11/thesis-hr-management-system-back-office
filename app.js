@@ -9,6 +9,7 @@ const jobTitleRoutes = require('./routes/jobTitleRoutes');
 const leaveTypeRoutes = require('./routes/leaveTypeRoutes');
 const leaveRoutes = require('./routes/leaveRequestRoutes');
 const roleRoutes = require('./routes/roleRoutes');
+const websiteRoutes = require('./routes/website/websiteRoutes');
 const errorHandler = require('./middlewares/errorHandler');
 const { verifyToken } = require('./middlewares/authMiddleware');
 const cors = require('cors');
@@ -17,6 +18,7 @@ app.use(cors());
 
 app.use(express.json());
 app.use('/api/users', authRoutes);
+app.use('/api/v1', websiteRoutes);
 
 app.use(verifyToken);
 
