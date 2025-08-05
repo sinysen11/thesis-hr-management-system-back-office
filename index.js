@@ -43,7 +43,7 @@ mongoose.connect(process.env.MONGO_URI, {
 })
   .then(() => {
     console.log('MongoDB connected');
-    createDefaultAdmin();
+    // createDefaultAdmin();
     app.listen(PORT, () => {
       console.log(`Server is running on http://localhost:${PORT}`);
     });
