@@ -9,6 +9,7 @@ const jobTitleRoutes = require('./routes/jobTitleRoutes');
 const leaveTypeRoutes = require('./routes/leaveTypeRoutes');
 const leaveRoutes = require('./routes/leaveRequestRoutes');
 const roleRoutes = require('./routes/roleRoutes');
+const PositionRoutes = require('./routes/positionRoutes');
 const websiteRoutes = require('./routes/website/websiteRoutes');
 const errorHandler = require('./middlewares/errorHandler');
 const { verifyToken } = require('./middlewares/authMiddleware');
@@ -31,6 +32,7 @@ app.use('/api/leave-types', leaveTypeRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/leave-balance', userRoutes);
 app.use('/api/leave-requests', leaveRoutes);
+app.use('/api/position', PositionRoutes);
 
 
 app.use(errorHandler);
