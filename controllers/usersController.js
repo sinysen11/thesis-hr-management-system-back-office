@@ -28,9 +28,7 @@ exports.createUser = async (req, res) => {
                 userId: user._id,
                 year: new Date().getFullYear(),
                 type: item._id,
-                total: item.totalDaysPerYear,
-                used: 0,
-                balances: item.totalDaysPerYear,
+                total: item.total,
             }));
 
             if (!balances) return

@@ -6,6 +6,7 @@ const LeaveRequestSchema = new mongoose.Schema({
   fromDate: { type: Date, required: true },
   toDate: { type: Date, required: true },
   approver: { type: mongoose.Schema.Types.ObjectId, ref: 'User'},
+  reason: { type: String, required: true },
   status: { type: String },
 }, { timestamps: true });
 
