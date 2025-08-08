@@ -3,6 +3,7 @@ const LeaveStatus = {
   APPROVED: 'APPROVED',
   REJECTED: 'REJECTED',
   CANCELLED: 'CANCELLED',
+  SUBMITTED: 'SUBMITTED'
 };
 
 module.exports = LeaveStatus;

@@ -1,0 +1,58 @@
+const ApplyJob = require('../models/website/job');
+const path = require('path');
+const fs = require('fs');
+
+exports.getAllApplyJobs = async (req, res) => {
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const skip = (page - 1) * limit;
+
+        const total = await ApplyJob.countDocuments();
+
+        const data = await ApplyJob.find()
+            .populate('applicant')
+            .populate('job')
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit);
+
+        res.status(200).json({
+            status: 1,
+            message: "Successfully",
+            data,
+            pagination: {
+                total,
+                page,
+                limit,
+            }
+        });
+
+    } catch (error) {
+        res.status(500).json({ status: 0, message: error.message });
+    }
+};
+
+
+exports.getResume = async (req, res) => {
+    try {
+        const { submit_id } = req.params;
+
+        const jobApplication = await ApplyJob.findById(submit_id);
+        if (!jobApplication) {
+            return res.status(404).json({ status: 0, message: 'Resume not found' });
+        }
+
+        const resumePath = path.join(__dirname, '..', jobApplication.resume.url);
+
+        if (!fs.existsSync(resumePath)) {
+            return res.status(404).json({ status: 0, message: 'File not found' });
+        }
+
+        res.setHeader('Content-Type', 'application/pdf');
+        res.sendFile(resumePath);
+
+    } catch (error) {
+        res.status(500).json({ status: 0, message: error.message });
+    }
+};
