@@ -41,7 +41,7 @@ exports.createLeaveRequest = async (req, res) => {
     await session.commitTransaction();
     session.endSession();
 
-    res.status(201).json({status: 1, message: 'Leave request created', leaveRequest });
+    res.status(201).json({ status: 1, message: 'Leave request created', leaveRequest });
   } catch (error) {
     await session.abortTransaction();
     session.endSession();
@@ -59,7 +59,7 @@ exports.getLeaveRequests = async (req, res) => {
     }
 
     if (!user_id) {
-      return res.status(404).json({status: -1, message: 'User not found' });
+      return res.status(404).json({ status: -1, message: 'User not found' });
     }
 
     const data = await LeaveRequest.find(filter)
@@ -68,9 +68,9 @@ exports.getLeaveRequests = async (req, res) => {
       .populate('approver')
       .sort({ createdAt: -1 });
 
-    res.status(200).json({status: 1, message: 'Successfully', data });
+    res.status(200).json({ status: 1, message: 'Successfully', data });
   } catch (err) {
-    res.status(500).json({status: 0, message: err.message });
+    res.status(500).json({ status: 0, message: err.message });
   }
 };
 
@@ -84,18 +84,25 @@ exports.getLeaveRequestsForApprover = async (req, res) => {
     }
 
     if (!user_id) {
-      return res.status(404).json({status: -1, message: 'User not found' });
+      return res.status(404).json({ status: -1, message: 'User not found' });
     }
 
     const data = await LeaveRequest.find(filter)
       .populate('user')
+      .populate({
+        path: 'user',
+        populate: {
+          path: 'department',
+          model: 'Department'
+        }
+      })
       .populate('type')
       .populate('approver')
       .sort({ createdAt: -1 });
 
-    res.status(200).json({status: 1, message: 'Successfully', data });
+    res.status(200).json({ status: 1, message: 'Successfully', data });
   } catch (err) {
-    res.status(500).json({status: 0, message: err.message });
+    res.status(500).json({ status: 0, message: err.message });
   }
 };
 
@@ -107,7 +114,7 @@ exports.updateLeaveStatus = async (req, res) => {
 
     const leaveRequest = await LeaveRequest.findById(request_id);
     if (!leaveRequest) {
-      return res.status(404).json({status: -1, message: 'Leave request not found' });
+      return res.status(404).json({ status: -1, message: 'Leave request not found' });
     }
 
     const isPending = leaveRequest.status === STATUS.PENDING;
@@ -127,10 +134,10 @@ exports.updateLeaveStatus = async (req, res) => {
       }
     }
     await leaveRequest.save();
-    res.status(200).json({status: 1, message: `Leave ${status.toLowerCase()}`, leaveRequest });
+    res.status(200).json({ status: 1, message: `Leave ${status.toLowerCase()}`, leaveRequest });
 
   } catch (err) {
-    res.status(500).json({status: 0, message: err.message });
+    res.status(500).json({ status: 0, message: err.message });
   }
 };
 
