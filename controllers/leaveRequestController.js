@@ -64,6 +64,13 @@ exports.getLeaveRequests = async (req, res) => {
 
     const data = await LeaveRequest.find(filter)
       .populate('user')
+      .populate({
+        path: 'user',
+        populate: {
+          path: 'department',
+          model: 'Department'
+        }
+      })
       .populate('type')
       .populate('approver')
       .sort({ createdAt: -1 });
