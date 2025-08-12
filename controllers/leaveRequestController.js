@@ -1,5 +1,6 @@
 const LeaveRequest = require('../models/LeaveRequest');
 const LeaveBalance = require('../models/leaveBalance');
+const User = require('../models/userModel');
 const STATUS = require('../enums/leaveStatus');
 const mongoose = require('mongoose');
 
@@ -80,6 +81,52 @@ exports.getLeaveRequests = async (req, res) => {
     res.status(500).json({ status: 0, message: err.message });
   }
 };
+
+exports.getAllApprover = async (req, res) => {
+  try {
+    const page = Math.max(parseInt(req.query.page || '1', 10), 1);
+    const limit = Math.max(parseInt(req.query.limit || '10', 10), 1);
+    const q = (req.query.q || '').trim();
+
+    const filter = q
+      ? {
+          $or: [
+            { first_name_en: new RegExp(q, 'i') },
+            { last_name_en: new RegExp(q, 'i') },
+            { email: new RegExp(q, 'i') },
+            { username: new RegExp(q, 'i') },
+          ],
+        }
+      : {};
+
+    const [data, total] = await Promise.all([
+      User.find(filter)
+        .select('-password')
+        .populate({
+          path: 'role',
+          match: { name: { $ne: 'Staff' } }
+        })
+        .populate('department')
+        .sort({ createdAt: -1 })
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .then(users => users.filter(u => u.role)),
+      User.countDocuments(filter)
+    ]);
+
+    res.json({
+      page,
+      limit,
+      total: data.length,
+      data,
+      status: 1,
+      message: 'Successfully'
+    });
+  } catch (err) {
+    res.status(500).json({ status: 0, message: err.message });
+  }
+};
+
 
 exports.getLeaveRequestsForApprover = async (req, res) => {
   try {
