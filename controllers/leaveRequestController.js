@@ -135,6 +135,7 @@ exports.getLeaveRequestsForApprover = async (req, res) => {
 
     if (user_id) {
       filter.approver = user_id;
+      filter.status = { $ne: STATUS.CANCELLED };
     }
 
     if (!user_id) {
