@@ -131,31 +131,61 @@ exports.getAllApprover = async (req, res) => {
 exports.getLeaveRequestsForApprover = async (req, res) => {
   try {
     const { user_id } = req.params;
-    const filter = {};
-
-    if (user_id) {
-      filter.approver = user_id;
-      filter.status = { $ne: STATUS.CANCELLED };
-    }
+    const { status, type, name, page = 1, limit = 10 } = req.query;
 
     if (!user_id) {
       return res.status(404).json({ status: -1, message: 'User not found' });
     }
 
-    const data = await LeaveRequest.find(filter)
-      .populate('user')
+    // Fetch all leave requests for this approver
+    let data = await LeaveRequest.find({ approver: user_id })
       .populate({
         path: 'user',
-        populate: {
-          path: 'department',
-          model: 'Department'
-        }
+        populate: { path: 'department', model: 'Department' }
       })
       .populate('type')
       .populate('approver')
       .sort({ createdAt: -1 });
 
-    res.status(200).json({ status: 1, message: 'Successfully', data });
+    data = data.filter(item => item.status !== STATUS.CANCELLED);
+
+    if (status) {
+      data = data.filter(item => item.status === status);
+    }
+
+    if (type) {
+      data = data.filter(item => item.type && item.type.code === type);
+    }
+
+    if (name) {
+      const userName = name.toLowerCase();
+      data = data.filter(item =>
+        item.user &&
+        (
+          (item.user.first_name_en && item.user.first_name_en.toLowerCase().includes(userName)) ||
+          (item.user.last_name_en && item.user.last_name_en.toLowerCase().includes(userName))
+        )
+      );
+    }
+
+    const total = data.length;
+    const pageNum = parseInt(page);
+    const limitNum = parseInt(limit);
+    const startIndex = (pageNum - 1) * limitNum;
+    const endIndex = startIndex + limitNum;
+    const request = data.slice(startIndex, endIndex);
+
+    res.status(200).json({
+      status: 1,
+      message: 'Successfully',
+      data: request,
+      pagination: {
+        total,
+        page: pageNum,
+        limit: limitNum
+      }
+    });
+
   } catch (err) {
     res.status(500).json({ status: 0, message: err.message });
   }
