@@ -1,4 +1,4 @@
-const LeaveRequest = require('../models/LeaveRequest');
+const LeaveRequest = require('../models/leaveRequest');
 const LeaveBalance = require('../models/leaveBalance');
 const User = require('../models/userModel');
 const STATUS = require('../enums/leaveStatus');

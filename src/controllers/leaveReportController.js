@@ -1,4 +1,4 @@
-const LeaveRequest = require('../models/LeaveRequest');
+const LeaveRequest = require('../models/leaveRequest');
 const STATUS = require('../enums/leaveStatus');
 
 
