@@ -90,13 +90,13 @@ exports.getAllApprover = async (req, res) => {
 
     const filter = q
       ? {
-          $or: [
-            { first_name_en: new RegExp(q, 'i') },
-            { last_name_en: new RegExp(q, 'i') },
-            { email: new RegExp(q, 'i') },
-            { username: new RegExp(q, 'i') },
-          ],
-        }
+        $or: [
+          { first_name_en: new RegExp(q, 'i') },
+          { last_name_en: new RegExp(q, 'i') },
+          { email: new RegExp(q, 'i') },
+          { username: new RegExp(q, 'i') },
+        ],
+      }
       : {};
 
     const [data, total] = await Promise.all([
@@ -137,25 +137,28 @@ exports.getLeaveRequestsForApprover = async (req, res) => {
       return res.status(404).json({ status: -1, message: 'User not found' });
     }
 
-    // Fetch all leave requests for this approver
-    let data = await LeaveRequest.find({ approver: user_id })
-      .populate({
-        path: 'user',
-        populate: { path: 'department', model: 'Department' }
-      })
+    const user = await User.findById(user_id).populate('role');
+    if (!user) {
+      return res.status(404).json({ status: -1, message: 'User not found' });
+    }
+
+    const query = { status: { $ne: STATUS.CANCELLED } };
+    if (user?.role?.name !== 'Super Admin') {
+      query.approver = user_id;
+    }
+    
+    if (status) query.status = status;
+    if (type) query['type.code'] = type;
+
+    const pageNum = parseInt(page);
+    const limitNum = parseInt(limit);
+    const skipNum = (pageNum - 1) * limitNum;
+
+    let data = await LeaveRequest.find(query)
+      .populate({ path: 'user', populate: { path: 'department', model: 'Department' } })
       .populate('type')
       .populate('approver')
       .sort({ createdAt: -1 });
-
-    data = data.filter(item => item.status !== STATUS.CANCELLED);
-
-    if (status) {
-      data = data.filter(item => item.status === status);
-    }
-
-    if (type) {
-      data = data.filter(item => item.type && item.type.code === type);
-    }
 
     if (name) {
       const userName = name.toLowerCase();
@@ -169,21 +172,13 @@ exports.getLeaveRequestsForApprover = async (req, res) => {
     }
 
     const total = data.length;
-    const pageNum = parseInt(page);
-    const limitNum = parseInt(limit);
-    const startIndex = (pageNum - 1) * limitNum;
-    const endIndex = startIndex + limitNum;
-    const request = data.slice(startIndex, endIndex);
+    const paginatedData = data.slice(skipNum, skipNum + limitNum);
 
     res.status(200).json({
       status: 1,
       message: 'Successfully',
-      data: request,
-      pagination: {
-        total,
-        page: pageNum,
-        limit: limitNum
-      }
+      data: paginatedData,
+      pagination: { total, page: pageNum, limit: limitNum }
     });
 
   } catch (err) {
