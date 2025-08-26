@@ -11,9 +11,9 @@ app.use(cors());
 
 app.use(express.json());
 app.use('/applicant', applicantRoutes);
-app.use('/get-jobs', getJobRoutes);
+app.use('/job-posting', getJobRoutes);
 
 app.use(verifyApplicantToken);
+
 app.use('/submit', applyJob);
-app.use('/get-apply', applyJob);
 module.exports = app;
