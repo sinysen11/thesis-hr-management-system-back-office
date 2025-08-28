@@ -10,6 +10,7 @@ const postJobSchema = new mongoose.Schema({
       description: { type: String, required: true },
       responsible: { type: String, required: true },
       requirement: { type: String, required: true },
+      branch: { type: String, required: true },
       benefits: { type: String, required: false }
 }, {
       timestamps: true
