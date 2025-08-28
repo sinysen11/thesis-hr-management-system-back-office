@@ -6,7 +6,7 @@ const JWT_SECRET = process.env.JWT_SECRET;
 
 exports.registerApplicant = async (req, res) => {
   try {
-    const { first_name, last_name, email, password, phone } = req.body;
+    const { first_name, last_name, email, password, confirm_password, phone, sex, dob, current_address, telegram,  } = req.body;
 
     const existing = await Applicant.findOne({ email });
     if (existing) {
@@ -14,13 +14,19 @@ exports.registerApplicant = async (req, res) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedConfirmPassword = await bcrypt.hash(confirm_password, 10);
 
     const applicant = await Applicant.create({
       first_name,
       last_name,
       email,
       password: hashedPassword,
+      confirm_password: hashedConfirmPassword,
       phone,
+      sex,
+      dob,
+      telegram,
+      current_address
     });
 
     res.status(201).json({ status: 1, message: 'Registered Successfully', applicant });
