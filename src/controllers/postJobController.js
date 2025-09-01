@@ -14,19 +14,45 @@ exports.createPostJob = async (req, res) => {
 // GET ALL
 exports.getAllPostJobs = async (req, res) => {
   try {
-    const jobs = await PostJob.find()
-    .populate('title')
-    .populate('department')
-    res.json({ jobs, status: 1, message: 'get jobs successfully' });
+    let { page = 1, limit = 10 } = req.query;
+    page = parseInt(page);
+    limit = parseInt(limit);
+
+    const skip = (page - 1) * limit;
+
+    const total = await PostJob.countDocuments();
+
+    const data = await PostJob.find()
+      .populate('title')
+      .populate('department')
+      .skip(skip)
+      .limit(limit);
+
+    res.status(200).json({
+      status: 1,
+      message: "Successfully",
+      data,
+      pagination: {
+        total,
+        page,
+        limit,
+      }
+    });
   } catch (err) {
-    res.status(500).json({status: 0, message: err.message });
+    res.status(500).json({
+      status: 0,
+      message: err.message,
+    });
   }
 };
+
 
 // GET ONE
 exports.getPostJobById = async (req, res) => {
   try {
-    const job = await PostJob.findById(req.params.id);
+    const job = await PostJob.findById(req.params.id)
+    .populate('title')
+    .populate('department')
     if (!job) return res.status(404).json({status: -1, message: 'Job not found' });
     res.json({status: 1, message: "Successfully", job});
   } catch (err) {
