@@ -36,7 +36,10 @@ exports.getJobForWebsiteById = async (req, res) => {
   try {
     const { job_id } = req.params;
 
-    const data = await PostJob.findById(job_id).sort({ createdAt: -1 });
+    const data = await PostJob.findById(job_id)
+      .populate('title')
+      .populate('department')
+      .sort({ createdAt: -1 });
 
     res.json({
       status: 1,
