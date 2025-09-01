@@ -15,5 +15,5 @@ app.use('/job-posting', getJobRoutes);
 
 app.use(verifyApplicantToken);
 
-app.use('/submit', applyJob);
+app.use('/apply-job/submit', applyJob);
 module.exports = app;

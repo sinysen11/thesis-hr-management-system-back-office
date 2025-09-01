@@ -3,11 +3,31 @@ const SubmitJob = require('../../models/website/job');
 
 exports.submit = async (req, res) => {
     try {
-        const { applicant, job } = req.body;
+        const { 
+            applicant, 
+            jobId,
+            apply_position,
+            requested_location,
+            education_from_year,
+            education_to_year,
+            school_name,
+            major,
+            degree,
+            location,
+            start_date,
+            end_date,
+            position,
+            company,
+            salary_usd,
+            expected_salary,
+            knows_someone,
+            knows_someone_details,
+            why_apply
+        } = req.body;
         const file = req.file;
         if (!applicant) {
             return res.status(400).json({ status: -1, message: "Applicant is required." });
-        } else if (!job) {
+        } else if (!jobId) {
             return res.status(400).json({ status: -1, message: "Job is required." });
         } else if (!file) {
             return res.status(400).json({ status: -1, message: "Resume file is required." });
@@ -15,7 +35,24 @@ exports.submit = async (req, res) => {
 
         const submission = new SubmitJob({
             applicant,
-            job,
+            jobId,
+            apply_position,
+            requested_location,
+            education_from_year,
+            education_to_year,
+            school_name,
+            major,
+            degree,
+            location,
+            start_date,
+            end_date,
+            position,
+            company,
+            salary_usd,
+            expected_salary,
+            knows_someone,
+            knows_someone_details,
+            why_apply,
             resume: {
                 fileName: file.originalname,
                 fileType: file.mimetype,
@@ -29,7 +66,7 @@ exports.submit = async (req, res) => {
 
         res.status(201).json({ status: 1, message: "Job submitted successfully", submission });
     } catch (error) {
-        res.status(500).json({ status: 0, message: "Server error while submitting job" });
+        res.status(500).json({ status: 0, message: error });
     }
 };
 
