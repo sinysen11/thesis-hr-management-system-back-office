@@ -14,7 +14,9 @@ exports.createPostJob = async (req, res) => {
 // GET ALL
 exports.getAllPostJobs = async (req, res) => {
   try {
-    const jobs = await PostJob.find();
+    const jobs = await PostJob.find()
+    .populate('title')
+    .populate('department')
     res.json({ jobs, status: 1, message: 'get jobs successfully' });
   } catch (err) {
     res.status(500).json({status: 0, message: err.message });
