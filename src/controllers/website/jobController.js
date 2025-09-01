@@ -13,6 +13,8 @@ exports.getAllJobForWebsite = async (req, res) => {
     const totalJobs = await PostJob.countDocuments();
 
     const data = await PostJob.find()
+      .populate('title')
+      .populate('department')
       .skip(skip)
       .limit(limit)
       .sort({ createdAt: -1 });
