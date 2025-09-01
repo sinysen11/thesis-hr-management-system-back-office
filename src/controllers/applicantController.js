@@ -1,4 +1,4 @@
-const ApplyJob = require('../models/website/job');
+const SubmitJob = require('../models/website/job');
 const path = require('path');
 const fs = require('fs');
 
@@ -8,11 +8,24 @@ exports.getAllApplyJobs = async (req, res) => {
         const limit = parseInt(req.query.limit) || 10;
         const skip = (page - 1) * limit;
 
-        const total = await ApplyJob.countDocuments();
+        const total = await SubmitJob.countDocuments();
 
-        const data = await ApplyJob.find()
+        const data = await SubmitJob.find()
             .populate('applicant')
-            .populate('job')
+            .populate({
+                path: "jobId",
+                populate: [
+                    {
+                        path: "title",
+                        model: "JobTitle",
+                    },
+                    {
+                        path: "department",
+                        model: "Department",
+                    },
+                ],
+            })
+
             .sort({ createdAt: -1 })
             .skip(skip)
             .limit(limit);
