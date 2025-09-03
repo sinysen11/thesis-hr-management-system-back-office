@@ -236,8 +236,8 @@ exports.updateLeaveStatus = async (req, res) => {
       staffEmail: user_request.email,
       staffName: user_request.last_name_en + " " + user_request.first_name_en,
       approverEmail: user_approver.email,
-      leaveDate: `From ${fromDate} to ${toDate}`,
-      reason: reason
+      leaveDate: `From ${leaveRequest.fromDate} to ${leaveRequest.toDate}`,
+      reason: leaveRequest.reason
     }
 
     await Mail.sendLeaveResponseMail(content)
