@@ -2,6 +2,7 @@ const LeaveRequest = require('../models/leaveRequest');
 const LeaveBalance = require('../models/leaveBalance');
 const User = require('../models/userModel');
 const STATUS = require('../enums/leaveStatus');
+const Mail = require('../controllers/mailController');
 const mongoose = require('mongoose');
 
 exports.createLeaveRequest = async (req, res) => {
@@ -37,11 +38,23 @@ exports.createLeaveRequest = async (req, res) => {
       status: STATUS.PENDING
     });
 
+    const [user_request, user_approver] = await Promise.all([
+      User.findById(user),
+      User.findById(approver)
+    ]);
+
+    let content = {
+      staffEmail: user_request.email,
+      staffName: user_request.last_name_en + " " + user_request.first_name_en,
+      approverEmail: user_approver.email,
+      leaveDate: `From ${fromDate} to ${toDate}`,
+      reason: reason
+    }
+    await Mail.sendLeaveRequestMail(content);
     await leaveRequest.save({ session });
 
     await session.commitTransaction();
     session.endSession();
-
     res.status(201).json({ status: 1, message: 'Leave request created', leaveRequest });
   } catch (error) {
     await session.abortTransaction();
@@ -146,7 +159,7 @@ exports.getLeaveRequestsForApprover = async (req, res) => {
     if (user?.role?.name !== 'Super Admin') {
       query.approver = user_id;
     }
-    
+
     if (status) query.status = status;
     if (type) query['type.code'] = type;
 
@@ -213,6 +226,21 @@ exports.updateLeaveStatus = async (req, res) => {
         await leaveBalance.save();
       }
     }
+
+    const [user_request, user_approver] = await Promise.all([
+      User.findById(user),
+      User.findById(approver)
+    ]);
+
+    let content = {
+      staffEmail: user_request.email,
+      staffName: user_request.last_name_en + " " + user_request.first_name_en,
+      approverEmail: user_approver.email,
+      leaveDate: `From ${fromDate} to ${toDate}`,
+      reason: reason
+    }
+
+    await Mail.sendLeaveResponseMail(content)
     await leaveRequest.save();
     res.status(200).json({ status: 1, message: `Leave ${status.toLowerCase()}`, leaveRequest });
 
