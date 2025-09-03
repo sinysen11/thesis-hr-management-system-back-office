@@ -230,14 +230,14 @@ exports.updateLeaveStatus = async (req, res) => {
       }
     }
 
-
+    const from_date = calculateLeaveDays(leaveRequest.fromDate);
+    const to_date = calculateLeaveDays(leaveRequest.toDate);
 
     let content = {
       staffEmail: leaveRequest.user.email,
       staffName: leaveRequest.user.last_name_en + " " + leaveRequest.user.first_name_en,
       approverName: leaveRequest.approver.last_name_en + " " + leaveRequest.approver.first_name_en,
-      approverEmail: leaveRequest.approver.email,
-      leaveDate: `From ${leaveRequest.fromDate} to ${leaveRequest.toDate}`,
+      leaveDate: `From ${from_date} to ${to_date}`,
       reason: leaveRequest.reason,
       status: status
     }
