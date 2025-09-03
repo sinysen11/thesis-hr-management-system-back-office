@@ -205,7 +205,10 @@ exports.updateLeaveStatus = async (req, res) => {
     const { request_id } = req.params;
     const { status } = req.body;
 
-    const leaveRequest = await LeaveRequest.findById(request_id);
+    const leaveRequest = await LeaveRequest.findById(request_id)
+    .populate({ path: 'user', model: 'User' })
+    .populate({ path: 'approver', model: 'User'});
+
     if (!leaveRequest) {
       return res.status(404).json({ status: -1, message: 'Leave request not found' });
     }
@@ -217,7 +220,7 @@ exports.updateLeaveStatus = async (req, res) => {
 
     if ((status === STATUS.REJECTED || status === STATUS.CANCELLED) && isPending) {
       const leaveBalance = await LeaveBalance.findOne({
-        userId: leaveRequest.user,
+        userId: leaveRequest.user._id,
         type: leaveRequest.type,
       }).populate('type');
       if (leaveBalance) {
@@ -227,17 +230,16 @@ exports.updateLeaveStatus = async (req, res) => {
       }
     }
 
-    const [user_request, user_approver] = await Promise.all([
-      User.findById(leaveRequest.user),
-      User.findById(leaveRequest.approver)
-    ]);
+
 
     let content = {
-      staffEmail: user_request.email,
-      staffName: user_request.last_name_en + " " + user_request.first_name_en,
+      staffEmail: leaveRequest.user.email,
+      staffName: leaveRequest.user.last_name_en + " " + leaveRequest.user.first_name_en,
+      approverName: leaveRequest.approver.last_name_en + " " + leaveRequest.approver.first_name_en,
       approverEmail: user_approver.email,
       leaveDate: `From ${leaveRequest.fromDate} to ${leaveRequest.toDate}`,
-      reason: leaveRequest.reason
+      reason: leaveRequest.reason,
+      status: status
     }
 
     await Mail.sendLeaveResponseMail(content)
