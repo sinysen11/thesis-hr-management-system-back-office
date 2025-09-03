@@ -228,8 +228,8 @@ exports.updateLeaveStatus = async (req, res) => {
     }
 
     const [user_request, user_approver] = await Promise.all([
-      User.findById(user),
-      User.findById(approver)
+      User.findById(leaveRequest.user),
+      User.findById(leaveRequest.approver)
     ]);
 
     let content = {
