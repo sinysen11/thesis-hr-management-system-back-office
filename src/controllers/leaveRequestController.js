@@ -230,8 +230,8 @@ exports.updateLeaveStatus = async (req, res) => {
       }
     }
 
-    const from_date = calculateLeaveDays(leaveRequest.fromDate);
-    const to_date = calculateLeaveDays(leaveRequest.toDate);
+    const from_date = formatDate(leaveRequest.fromDate);
+    const to_date = formatDate(leaveRequest.toDate);
 
     let content = {
       staffEmail: leaveRequest.user.email,
@@ -254,4 +254,9 @@ exports.updateLeaveStatus = async (req, res) => {
 function calculateLeaveDays(from, to) {
   const oneDay = 24 * 60 * 60 * 1000;
   return Math.round((new Date(to) - new Date(from)) / oneDay) + 1;
+}
+function formatDate(date) {
+  if (!date) return "N/A"; 
+  const options = { year: 'numeric', month: 'long', day: 'numeric' };
+  return new Intl.DateTimeFormat('en-US', options).format(new Date(date));
 }
