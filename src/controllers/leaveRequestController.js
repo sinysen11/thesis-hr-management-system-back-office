@@ -236,7 +236,7 @@ exports.updateLeaveStatus = async (req, res) => {
       staffEmail: leaveRequest.user.email,
       staffName: leaveRequest.user.last_name_en + " " + leaveRequest.user.first_name_en,
       approverName: leaveRequest.approver.last_name_en + " " + leaveRequest.approver.first_name_en,
-      approverEmail: user_approver.email,
+      approverEmail: leaveRequest.approver.email,
       leaveDate: `From ${leaveRequest.fromDate} to ${leaveRequest.toDate}`,
       reason: leaveRequest.reason,
       status: status
