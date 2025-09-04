@@ -48,24 +48,31 @@ exports.getAllApplyJobs = async (req, res) => {
 
 
 exports.getResume = async (req, res) => {
-    try {
-        const { submit_id } = req.params;
+  try {
+    const { submit_id } = req.params;
+    const jobApplication = await SubmitJob.findById(submit_id);
 
-        const jobApplication = await ApplyJob.findById(submit_id);
-        if (!jobApplication) {
-            return res.status(404).json({ status: 0, message: 'Resume not found' });
-        }
-
-        const resumePath = path.join(__dirname, '..', jobApplication.resume.url);
-
-        if (!fs.existsSync(resumePath)) {
-            return res.status(404).json({ status: 0, message: 'File not found' });
-        }
-
-        res.setHeader('Content-Type', 'application/pdf');
-        res.sendFile(resumePath);
-
-    } catch (error) {
-        res.status(500).json({ status: 0, message: error.message });
+    if (!jobApplication) {
+      return res.status(404).json({ status: 0, message: 'Resume not found' });
     }
+
+    let resumeUrl = jobApplication.resume.url
+      .replace(/^\/+/, '')
+      .replace(/\\/g, '/');
+
+    const resumePath = path.join(__dirname, '..', '..', resumeUrl);
+
+    console.log("resumePath:", resumePath);
+
+    if (!fs.existsSync(resumePath)) {
+      return res.status(404).json({ status: 0, message: 'File not found' });
+    }
+    res.setHeader('Content-Type', 'application/pdf');
+    res.sendFile(resumePath);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ status: 0, message: error.message });
+  }
 };
+
+
