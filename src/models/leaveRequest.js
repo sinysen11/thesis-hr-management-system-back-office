@@ -8,6 +8,9 @@ const LeaveRequestSchema = new mongoose.Schema({
   approver: { type: mongoose.Schema.Types.ObjectId, ref: 'User'},
   reason: { type: String, required: true },
   status: { type: String },
+  isMorning: { type: Boolean },
+  isNoon: { type: Boolean },
+  isFull: { type: Boolean }
 }, { timestamps: true });
 
 module.exports = mongoose.model('LeaveRequest', LeaveRequestSchema);

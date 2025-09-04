@@ -10,23 +10,32 @@ exports.createLeaveRequest = async (req, res) => {
   session.startTransaction();
 
   try {
-    const { user, type, fromDate, toDate, approver, reason } = req.body;
+    const { user, type, fromDate, toDate, approver, reason, isMorning, isNoon, isFull } = req.body;
 
-    const days = calculateLeaveDays(fromDate, toDate);
+    let days = 0;
+
+    if (isMorning || isNoon) {
+      days = 0.5;
+    } else if (isFull) {
+      days = calculateLeaveDays(fromDate, toDate);
+    } else {
+      throw new Error("Invalid leave type: must specify isMorning, isNoon, or isFull");
+    }
 
     const leaveBalance = await LeaveBalance.find({ userId: user, type: type })
       .populate('type')
       .session(session);
 
-    if (!leaveBalance) throw new Error('Leave balance not found');
+    if (!leaveBalance || leaveBalance.length === 0) {
+      throw new Error('Leave balance not found');
+    }
 
     let balance = leaveBalance[0];
-    if (!balance || balance.total < days) {
+    if (balance.total < days) {
       throw new Error('Insufficient leave balance');
     }
 
     balance.total -= days;
-
     await balance.save({ session });
     const leaveRequest = new LeaveRequest({
       user,
@@ -35,7 +44,10 @@ exports.createLeaveRequest = async (req, res) => {
       toDate,
       approver,
       reason,
-      status: STATUS.PENDING
+      status: STATUS.PENDING,
+      isMorning,
+      isNoon,
+      isFull
     });
 
     const [user_request, user_approver] = await Promise.all([
@@ -49,7 +61,8 @@ exports.createLeaveRequest = async (req, res) => {
       approverEmail: user_approver.email,
       leaveDate: `From ${fromDate} to ${toDate}`,
       reason: reason
-    }
+    };
+
     await Mail.sendLeaveRequestMail(content);
     await leaveRequest.save({ session });
 
@@ -206,8 +219,8 @@ exports.updateLeaveStatus = async (req, res) => {
     const { status } = req.body;
 
     const leaveRequest = await LeaveRequest.findById(request_id)
-    .populate({ path: 'user', model: 'User' })
-    .populate({ path: 'approver', model: 'User'});
+      .populate({ path: 'user', model: 'User' })
+      .populate({ path: 'approver', model: 'User' });
 
     if (!leaveRequest) {
       return res.status(404).json({ status: -1, message: 'Leave request not found' });
@@ -256,7 +269,7 @@ function calculateLeaveDays(from, to) {
   return Math.round((new Date(to) - new Date(from)) / oneDay) + 1;
 }
 function formatDate(date) {
-  if (!date) return "N/A"; 
+  if (!date) return "N/A";
   const options = { year: 'numeric', month: 'long', day: 'numeric' };
   return new Intl.DateTimeFormat('en-US', options).format(new Date(date));
 }
