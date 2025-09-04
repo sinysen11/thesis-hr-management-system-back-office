@@ -62,8 +62,6 @@ exports.getResume = async (req, res) => {
 
     const resumePath = path.join(__dirname, '..', '..', resumeUrl);
 
-    console.log("resumePath:", resumePath);
-
     if (!fs.existsSync(resumePath)) {
       return res.status(404).json({ status: 0, message: 'File not found' });
     }
