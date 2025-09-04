@@ -227,7 +227,13 @@ exports.updateLeaveStatus = async (req, res) => {
     }
 
     const isPending = leaveRequest.status === STATUS.PENDING;
-    const totalDays = calculateLeaveDays(leaveRequest.fromDate, leaveRequest.toDate);
+
+    let totalDays = 0;
+    if (leaveRequest.isMorning || leaveRequest.isNoon) {
+      totalDays = 0.5;
+    } else if (leaveRequest.isFull) {
+      totalDays = calculateLeaveDays(leaveRequest.fromDate, leaveRequest.toDate);
+    }
 
     leaveRequest.status = status;
 
@@ -236,9 +242,9 @@ exports.updateLeaveStatus = async (req, res) => {
         userId: leaveRequest.user._id,
         type: leaveRequest.type,
       }).populate('type');
+
       if (leaveBalance) {
-        const total_update = leaveBalance.total + totalDays;
-        leaveBalance.total = total_update;
+        leaveBalance.total += totalDays;
         await leaveBalance.save();
       }
     }
@@ -253,16 +259,18 @@ exports.updateLeaveStatus = async (req, res) => {
       leaveDate: `From ${from_date} to ${to_date}`,
       reason: leaveRequest.reason,
       status: status
-    }
+    };
 
-    await Mail.sendLeaveResponseMail(content)
+    await Mail.sendLeaveResponseMail(content);
     await leaveRequest.save();
+
     res.status(200).json({ status: 1, message: `Leave ${status.toLowerCase()}`, leaveRequest });
 
   } catch (err) {
     res.status(500).json({ status: 0, message: err.message });
   }
 };
+
 
 function calculateLeaveDays(from, to) {
   const oneDay = 24 * 60 * 60 * 1000;
