@@ -37,7 +37,7 @@ exports.getLeaveRequestsReportForApprover = async (req, res) => {
 
 exports.getLeaveRequestsReport = async (req, res) => {
     try {
-        const { status, name, type, page = 1, limit = 10 } = req.query;
+        const { status, name, type, fromDate, toDate, page = 1, limit = 10 } = req.query;
 
         let data = await LeaveRequest.find()
             .populate({
@@ -59,6 +59,11 @@ exports.getLeaveRequestsReport = async (req, res) => {
 
         if (type) {
             data = data.filter(item => item.type && item.type.code === type);
+        }
+
+        if (fromDate && toDate) {
+            data.fromDate = { $gte: moment(fromDate).startOf('day').toDate() };
+            data.toDate = { $lte: moment(toDate).endOf('day').toDate() };
         }
 
         if (name) {

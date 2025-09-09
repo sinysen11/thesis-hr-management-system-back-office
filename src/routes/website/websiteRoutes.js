@@ -4,6 +4,7 @@ const app = express();
 const applicantRoutes = require('./applicantRoutes');
 const getJobRoutes = require('./jobRoutes');
 const applyJob = require('./applyJobRoutes');
+const DocumentRoutes = require('../../routes/documentRoutes');
 const { verifyApplicantToken } = require('../../middlewares/authMiddleware');
 const cors = require('cors');
 
@@ -14,6 +15,6 @@ app.use('/applicant', applicantRoutes);
 app.use('/job-posting', getJobRoutes);
 
 app.use(verifyApplicantToken);
-
+app.use('/document', DocumentRoutes);
 app.use('/apply-job/submit', applyJob);
 module.exports = app;

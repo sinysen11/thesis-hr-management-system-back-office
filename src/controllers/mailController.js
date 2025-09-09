@@ -73,4 +73,28 @@ async function sendLeaveResponseMail({ staffEmail, staffName, approverName, leav
   return transporter.sendMail(mailOptions);
 }
 
-module.exports = { sendLeaveRequestMail, sendLeaveResponseMail };
+async function sendApplyJobMail(applicant_mail) {
+  console.log(applicant_mail)
+  const transporter = await createTransporter();
+
+  const mailOptions = {
+    from: EMAIL_USER,
+    to: applicant_mail,
+    subject: 'SunFlex Cambodia Career',
+    text: `
+      Dear Applicant,
+
+      Thanks for your interest in vacacy position in SunFlex (Cambodia) Co., Ltd.
+      This is a confirmation that we have recieved your application. Our Human Resource team is reviewing your application and you will be contacted if you are qualified with position that have applied.
+      Otherwish, we will keep your application in our database for further opportunity arises which fits your credentials and experience.
+      We wish you all the best in your career and future endeavor.
+
+      Best regards,
+      Human Resources & Training
+    `,
+  };
+  console.log(mailOptions)
+  return transporter.sendMail(mailOptions);
+}
+
+module.exports = { sendLeaveRequestMail, sendLeaveResponseMail, sendApplyJobMail };

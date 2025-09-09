@@ -5,12 +5,7 @@ const fillOnlineSchema = new mongoose.Schema({
     dob: { type: String, required: true },
     email: { type: String, required: true },
     contact: { type: String, required: true },
-    resume: {
-        fileName: { type: String, required: true },
-        fileType: { type: String, default: 'application/pdf' },
-        fileSize: Number,
-        url: { type: String, required: true }
-    },
+    resume: { type: mongoose.Schema.Types.ObjectId, ref: 'Document'},
     isNID: { type: Boolean, required: true },
     isCovidVac: { type: Boolean, required: true }
 }, {

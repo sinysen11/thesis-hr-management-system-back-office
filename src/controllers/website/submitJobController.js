@@ -1,5 +1,8 @@
 const LeaveStatus = require('../../enums/leaveStatus');
 const SubmitJob = require('../../models/website/job');
+const Mail = require('../../controllers/mailController');
+const Applicant = require('../../models/website/applicant');
+
 
 exports.submit = async (req, res) => {
     try {
@@ -22,14 +25,14 @@ exports.submit = async (req, res) => {
             expected_salary,
             knows_someone,
             knows_someone_details,
+            resume,
             why_apply
         } = req.body;
-        const file = req.file;
         if (!applicant) {
             return res.status(400).json({ status: -1, message: "Applicant is required." });
         } else if (!jobId) {
             return res.status(400).json({ status: -1, message: "Job is required." });
-        } else if (!file) {
+        } else if (!resume) {
             return res.status(400).json({ status: -1, message: "Resume file is required." });
         }
 
@@ -53,15 +56,14 @@ exports.submit = async (req, res) => {
             knows_someone,
             knows_someone_details,
             why_apply,
-            resume: {
-                fileName: file.originalname,
-                fileType: file.mimetype,
-                fileSize: file.size,
-                url: file.path
-            },
+            resume,
             status: LeaveStatus.SUBMITTED
         });
 
+        const data = await Applicant.findById(applicant);
+        const applicant_mail = data.email;
+        
+        await Mail.sendApplyJobMail(applicant_mail);
         await submission.save();
 
         res.status(201).json({ status: 1, message: "Job submitted successfully", submission });
@@ -80,6 +82,7 @@ exports.getApplyJobs = async (req, res) => {
         const total = await SubmitJob.countDocuments({ applicant: applicant_id });
         const data = await SubmitJob.find({ applicant: applicant_id })
             .populate('applicant')
+            .populate('resume')
             .populate('job')
             .skip(skip)
             .limit(limit);

@@ -20,12 +20,7 @@ const SubmitJobSchema = new mongoose.Schema({
     knows_someone: { type: Boolean },
     knows_someone_details: { type: String },
     why_apply: { type: String },
-    resume: {
-        fileName: { type: String, required: true },
-        fileType: { type: String, default: 'application/pdf' },
-        fileSize: Number,
-        url: { type: String, required: true }
-    }
+    resume: { type: mongoose.Schema.Types.ObjectId, ref: 'Document'},
 }, {
     timestamps: true
 });
