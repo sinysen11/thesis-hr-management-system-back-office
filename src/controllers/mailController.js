@@ -99,14 +99,14 @@ async function sendForgotPasswordMail({ email, resetLink }) {
   const transporter = await createTransporter();
 
   const mailOptions = {
-    from: EMAIL_USER,
+    from: process.env.EMAIL_USER,
     to: email,
     subject: "Password Reset Request",
     text: `
       Dear User,
 
       We received a request to reset your password.
-      Please click the link below to set a new password:
+      Please use the following link to set a new password:
 
       ${resetLink}
 
@@ -115,6 +115,22 @@ async function sendForgotPasswordMail({ email, resetLink }) {
       Best regards,
       SunFlex Cambodia Team
     `,
+    html: `
+      <div style="font-family: Arial, sans-serif; color: #333;">
+        <p>Dear User,</p>
+        <p>We received a request to reset your password.</p>
+        <p>Please click the button below to set a new password:</p>
+        <p style="margin: 20px 0;">
+          <a href="${resetLink}" target="_blank"
+             style="background-color: #1a73e8; color: #fff; padding: 12px 20px; 
+                    text-decoration: none; border-radius: 5px; display: inline-block;">
+            Reset Password
+          </a>
+        </p>
+        <p>If you did not request this, please ignore this email.</p>
+        <p>Best regards,<br>SunFlex Cambodia Team</p>
+      </div>
+    `
   };
 
   return transporter.sendMail(mailOptions);
