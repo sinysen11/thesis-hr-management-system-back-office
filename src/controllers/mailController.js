@@ -74,7 +74,6 @@ async function sendLeaveResponseMail({ staffEmail, staffName, approverName, leav
 }
 
 async function sendApplyJobMail(applicant_mail) {
-  console.log(applicant_mail)
   const transporter = await createTransporter();
 
   const mailOptions = {
@@ -93,8 +92,54 @@ async function sendApplyJobMail(applicant_mail) {
       Human Resources & Training
     `,
   };
-  console.log(mailOptions)
   return transporter.sendMail(mailOptions);
 }
 
-module.exports = { sendLeaveRequestMail, sendLeaveResponseMail, sendApplyJobMail };
+async function sendForgotPasswordMail({ email, resetLink }) {
+  const transporter = await createTransporter();
+
+  const mailOptions = {
+    from: EMAIL_USER,
+    to: email,
+    subject: "Password Reset Request",
+    text: `
+      Dear User,
+
+      We received a request to reset your password.
+      Please click the link below to set a new password:
+
+      ${resetLink}
+
+      If you did not request this, please ignore this email.
+
+      Best regards,
+      SunFlex Cambodia Team
+    `,
+  };
+
+  return transporter.sendMail(mailOptions);
+}
+
+async function sendResetPasswordConfirmationMail({ email }) {
+  const transporter = await createTransporter();
+
+  const mailOptions = {
+    from: EMAIL_USER,
+    to: email,
+    subject: "Your Password Has Been Changed",
+    text: `
+      Dear User,
+
+      This is a confirmation that your password has been successfully changed.
+
+      If you did not perform this action, please contact our support immediately.
+
+      Best regards,
+      SunFlex Cambodia Team
+    `,
+  };
+
+  return transporter.sendMail(mailOptions);
+}
+
+module.exports = { sendLeaveRequestMail, sendLeaveResponseMail, sendApplyJobMail, sendForgotPasswordMail, sendResetPasswordConfirmationMail };
