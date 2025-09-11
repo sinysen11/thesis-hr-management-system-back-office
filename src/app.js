@@ -13,6 +13,7 @@ const PositionRoutes = require('./routes/positionRoutes');
 const ApplicantRoutes = require('./routes/applicantRoutes');
 const ReportRoutes = require('./routes/reportRoutes');
 const MailRoutes = require('./routes/mailRoutes');
+const ActivityLogRoutes = require('./routes/activitylogRoutes')
 const websiteRoutes = require('./routes/website/websiteRoutes');
 const errorHandler = require('./middlewares/errorHandler');
 const { verifyToken } = require('./middlewares/authMiddleware');
@@ -39,6 +40,7 @@ app.use('/api/position', PositionRoutes);
 app.use('/api/get-applicant', ApplicantRoutes);
 app.use('/api/leave', ReportRoutes);
 app.use('/api/send-mail', MailRoutes);
+app.use('/api/activity-log', ActivityLogRoutes)
 app.use(errorHandler);
 
 module.exports = app;
