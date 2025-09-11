@@ -1,4 +1,5 @@
 const LeaveType = require('../models/leaveTypes');
+const { logUserAction } = require('../middlewares/activityLogger'); 
 
 exports.createLeaveType = async (req, res) => {
   try {
@@ -8,9 +9,11 @@ exports.createLeaveType = async (req, res) => {
     }
 
     const leaveType = new LeaveType(req.body);
+    await logUserAction({ req, action: "create_leave_type",});
     await leaveType.save();
     res.status(201).json({status: 1, message: "Successfully", leaveType});
   } catch (err) {
+    await logUserAction({ req, responseMessage: err.message, action: "create_leave_type",});
     res.status(400).json({status: 0, message: err.message });
   }
 };
@@ -38,8 +41,10 @@ exports.updateLeaveType = async (req, res) => {
   try {
     const leaveType = await LeaveType.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
     if (!leaveType) return res.status(404).json({status: -1, message: 'Leave Type not found' });
+    await logUserAction({ req, action: "update_leave_type",});
     res.json({status: 1, message: "Successfully", leaveType});
   } catch (err) {
+    await logUserAction({ req, responseMessage: err.message, action: "update_leave_type",});
     res.status(400).json({status: 0, message: err.message });
   }
 };
@@ -48,8 +53,10 @@ exports.deleteLeaveType = async (req, res) => {
   try {
     const leaveType = await LeaveType.findByIdAndDelete(req.params.id);
     if (!leaveType) return res.status(404).json({status: -1, message: 'Leave Type not found' });
+    await logUserAction({ req, action: "delete_leave_type",});
     res.json({status: 1, message: 'Leave Type deleted' });
   } catch (err) {
+    await logUserAction({ req, responseMessage: err.message, action: "delete_leave_type",});
     res.status(500).json({status: 0, message: err.message });
   }
 };

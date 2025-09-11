@@ -4,6 +4,7 @@ const LeaveType = require('../models/leaveTypes');
 const LeaveBalance = require('../models/leaveBalance');
 const jwt = require('jsonwebtoken');
 const Mail = require('../controllers/mailController');
+const { logUserAction } = require('../middlewares/activityLogger');
 
 const CLIENT_DOMAIN = process.env.CLIENT_DOMAIN;
 
@@ -38,7 +39,7 @@ exports.createUser = async (req, res) => {
             if (!balances) return
             await LeaveBalance.insertMany(balances);
         }
-
+        await logUserAction({ req, action: "create_user",});
         res.status(201).json({
             status: 1,
             message: 'User created successfully',
@@ -48,6 +49,7 @@ exports.createUser = async (req, res) => {
         if (err?.code === 11000 && err?.keyPattern?.email) {
             return res.status(400).json({status: 0, message: 'Email already in use' });
         }
+        await logUserAction({ req, responseMessage: err.message, action: "create_role",});
         res.status(400).json({status: 0, message: err.message });
     }
 };
@@ -126,7 +128,7 @@ exports.updateUser = async (req, res) => {
             .populate('department')
 
         if (!user) return res.status(404).json({status: -1, message: 'User not found' });
-
+        await logUserAction({ req, action: "update_user",});
         res.json({
             status: 1,
             message: 'User updated successfully',
@@ -136,6 +138,7 @@ exports.updateUser = async (req, res) => {
         if (err?.code === 11000 && err?.keyPattern?.email) {
             return res.status(400).json({status: 0, message: 'Email already in use' });
         }
+        await logUserAction({ req, responseMessage: err.message, action: "update_user",});
         res.status(400).json({status: 0, message: err.message });
     }
 };
@@ -146,10 +149,12 @@ exports.deleteUser = async (req, res) => {
         const user = await User.findByIdAndDelete(req.params.id).select('-password');
         if (!user) return res.status(404).json({status: -1, message: 'User not found' });
 
+        await logUserAction({ req, action: "delete_user",});
         await LeaveBalance.deleteMany({ user: user._id });
 
         res.json({status: 1, message: 'User deleted successfully' });
     } catch (err) {
+        await logUserAction({ req, responseMessage: err.message, action: "delete_user",});
         res.status(500).json({status: 0, message: err.message });
     }
 };

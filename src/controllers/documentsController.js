@@ -1,6 +1,7 @@
 const Document = require('../models/documents');
 const fs = require('fs');
 const path = require('path');
+const { logUserAction } = require('../middlewares/activityLogger');
 
 exports.uploadDocuments = async (req, res) => {
   try {
@@ -26,6 +27,7 @@ exports.uploadDocuments = async (req, res) => {
         path: filePath,
         size: stats.size
       });
+      await logUserAction({ req, action: "upload_document",});
       await doc.save();
 
       res.status(200).json({ status: 1, message: 'PDF uploaded successfully', document: doc });
@@ -36,6 +38,7 @@ exports.uploadDocuments = async (req, res) => {
     });
 
   } catch (error) {
+    await logUserAction({ req, responseMessage: error.message, action: "upload_document",});
     res.status(500).json({ status: -1, message: 'Server error', error: error.message });
   }
 };

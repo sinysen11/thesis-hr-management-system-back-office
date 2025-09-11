@@ -2,6 +2,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const Applicant = require('../../models/website/applicant');
 const Mail = require('../../controllers/mailController');
+const { logLoginActivity } = require('../../middlewares/activityLogger');
 
 const JWT_SECRET = process.env.JWT_SECRET;
 const CLIENT_DOMAIN = process.env.CLIENT_DOMAIN;
@@ -30,9 +31,10 @@ exports.registerApplicant = async (req, res) => {
       telegram,
       current_address
     });
-
+    await logLoginActivity({ req,  statusCode: 200, describtion: "From Website", responseMessage: 'Registered successful'});
     res.status(201).json({ status: 1, message: 'Registered Successfully', applicant });
   } catch (err) {
+    await logLoginActivity({ req,  statusCode: 0, describtion: "From Website", responseMessage: err.message });
     res.status(500).json({ status: 0, message: err.message });
   }
 };
@@ -53,6 +55,7 @@ exports.loginApplicant = async (req, res) => {
 
     const token = jwt.sign({ id: applicant._id }, JWT_SECRET, { expiresIn: '4h' });
 
+    await logLoginActivity({ req,  statusCode: 200, describtion: "From Website", responseMessage: 'Login successful', userId: applicant});
     res.json({
       status: 1,
       message: 'Login Successfully',
@@ -60,6 +63,7 @@ exports.loginApplicant = async (req, res) => {
       applicant: applicant
     });
   } catch (err) {
+    await logLoginActivity({ req,  statusCode: 200, describtion: "From Website", responseMessage: err.message, userId: applicant});
     res.status(500).json({ status: 0, message: err.message });
   }
 };
@@ -81,10 +85,12 @@ exports.forgotPassword = async (req, res) => {
 
     const resetLink = `${CLIENT_DOMAIN}/website/reset-password?token=${token}`;
 
+    await logLoginActivity({ req,  statusCode: 200, describtion: "From Website", responseMessage: 'Forget Password', userId: applicant._id });
     await Mail.sendForgotPasswordMail({ email, resetLink });
 
     res.json({ status: 1, message: "Password reset link sent to your email" });
   } catch (err) {
+    await logLoginActivity({ req,  statusCode: 200, describtion: "From Website", responseMessage: err.message, userId: applicant._id });
     res.status(500).json({ status: 0, message: err.message });
   }
 };
@@ -105,10 +111,12 @@ exports.resetPassword = async (req, res) => {
     applicant.resetTokenExpiry = undefined;
     await applicant.save();
 
+    await logLoginActivity({ req,  statusCode: 200, describtion: "From Website", responseMessage: 'Reset Password', userId: applicant._id });
     await Mail.sendResetPasswordConfirmationMail({ email: applicant.email });
 
     res.json({ status: 1, message: "Password reset successful" });
   } catch (err) {
+    await logLoginActivity({ req,  statusCode: 200, describtion: "From Website", responseMessage: err.message, userId: applicant._id });
     res.status(400).json({ status: 0, message: err.message });
   }
 };

@@ -1,4 +1,5 @@
 const SubmitJob = require('../models/website/job');
+const { logUserAction } = require('../middlewares/activityLogger');
 
 exports.getAllApplyJobs = async (req, res) => {
     try {
@@ -28,6 +29,11 @@ exports.getAllApplyJobs = async (req, res) => {
             .sort({ createdAt: -1 })
             .skip(skip)
             .limit(limit);
+
+        await logUserAction({
+            req,
+            action: "get_allapplyjobs",
+        });
 
         res.status(200).json({
             status: 1,

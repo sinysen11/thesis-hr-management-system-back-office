@@ -1,6 +1,6 @@
 const LeaveRequest = require('../models/leaveRequest');
 const STATUS = require('../enums/leaveStatus');
-
+const { logUserAction } = require('../middlewares/activityLogger'); 
 
 exports.getLeaveRequestsReportForApprover = async (req, res) => {
     try {
@@ -28,9 +28,10 @@ exports.getLeaveRequestsReportForApprover = async (req, res) => {
             .populate('type')
             .populate('approver')
             .sort({ createdAt: -1 });
-
+        await logUserAction({ req, action: "get_leave_report",});
         res.status(200).json({ status: 1, message: 'Successfully', data });
     } catch (err) {
+        await logUserAction({ req, responseMessage: err.message, action: "get_leave_report",});
         res.status(500).json({ status: 0, message: err.message });
     }
 };
@@ -86,7 +87,7 @@ exports.getLeaveRequestsReport = async (req, res) => {
         const report = data.slice(startIndex, endIndex);
 
         const report_date = new Date();
-
+        await logUserAction({ req, action: "get_leave_report",});
         res.status(200).json({
             status: 1,
             message: 'Successfully',
@@ -99,6 +100,7 @@ exports.getLeaveRequestsReport = async (req, res) => {
             data: report
         });
     } catch (err) {
+        await logUserAction({ req, responseMessage: err.message, action: "get_leave_report",});
         res.status(500).json({ status: 0, message: err.message });
     }
 };

@@ -1,12 +1,15 @@
 const Department = require('../models/departments');
+const { logUserAction } = require('../middlewares/activityLogger');
 
 // Create a new department
 exports.createDepartment = async (req, res) => {
   try {
     const department = new Department(req.body);
     const data = await department.save();
+    await logUserAction({ req, action: "create_department",});
     res.status(201).json({status: 1, message: "Successfully", data});
   } catch (err) {
+    await logUserAction({ req, responseMessage: err.message, action: "create_department",});
     res.status(400).json({status: 0,  error: err.message });
   }
 };

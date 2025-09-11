@@ -2,6 +2,7 @@ const LeaveStatus = require('../../enums/leaveStatus');
 const SubmitJob = require('../../models/website/job');
 const Mail = require('../../controllers/mailController');
 const Applicant = require('../../models/website/applicant');
+const { logUserAction } = require('../../middlewares/activityLogger');
 
 
 exports.submit = async (req, res) => {
@@ -61,13 +62,18 @@ exports.submit = async (req, res) => {
         });
 
         const data = await Applicant.findById(applicant);
-        const applicant_mail = data.email;
+        data.apply_count += 1;
         
+        const applicant_mail = data.email;
+
+        await logUserAction({ req, describtion: "From Website", action: "apply_job",});
+        await data.save();
         await Mail.sendApplyJobMail(applicant_mail);
         await submission.save();
 
         res.status(201).json({ status: 1, message: "Job submitted successfully", submission });
     } catch (error) {
+        await logUserAction({ req, responseMessage: err.message, describtion: "From Website", action: "apply_job",});
         res.status(500).json({ status: 0, message: error });
     }
 };

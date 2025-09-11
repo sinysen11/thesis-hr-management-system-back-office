@@ -1,4 +1,5 @@
 const Role = require('../models/role');
+const { logUserAction } = require('../middlewares/activityLogger');
 
 // Create Role
 exports.createRole = async (req, res) => {
@@ -6,9 +7,11 @@ exports.createRole = async (req, res) => {
     const { name, permissions } = req.body;
 
     const role = new Role({ name, permissions });
+    await logUserAction({ req, action: "create_role",});
     await role.save();
     res.status(201).json({status: 1, message: "Role Created Successfully", role});
   } catch (error) {
+    await logUserAction({ req, responseMessage: error.message, action: "create_role",});
     res.status(400).json({status: 0, message: error.message });
   }
 };
@@ -44,8 +47,10 @@ exports.updateRole = async (req, res) => {
       { new: true, runValidators: true }
     );
     if (!role) return res.status(404).json({status: -1, message: 'Role not found' });
+    await logUserAction({ req, action: "update_role",});
     res.json({status: 1, message: "Successfully", role});
   } catch (error) {
+    await logUserAction({ req, responseMessage: error.message, action: "update_role",});
     res.status(400).json({status: 0, message: error.message });
   }
 };
@@ -55,8 +60,10 @@ exports.deleteRole = async (req, res) => {
   try {
     const role = await Role.findByIdAndDelete(req.params.id);
     if (!role) return res.status(404).json({status: -1, message: 'Role not found' });
+    await logUserAction({ req, action: "delete_role",});
     res.json({ message: 'Role deleted successfully', status: 1, role });
   } catch (error) {
+    await logUserAction({ req, responseMessage: error.message, action: "delete_role",});
     res.status(500).json({status: 0, message: error.message });
   }
 };

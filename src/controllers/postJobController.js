@@ -1,12 +1,15 @@
 const PostJob = require('../models/postJob');
+const { logUserAction } = require('../middlewares/activityLogger');
 
 // CREATE
 exports.createPostJob = async (req, res) => {
   try {
     const newJob = new PostJob(req.body);
     const savedJob = await newJob.save();
+    await logUserAction({ req, action: "post_job",});
     res.status(201).json({status: 1, message: "Successfully", savedJob});
   } catch (err) {
+    await logUserAction({ req, responseMessage: err.message, action: "post_job",});
     res.status(400).json({status: 0, message: err.message });
   }
 };
@@ -69,8 +72,10 @@ exports.updatePostJob = async (req, res) => {
       { new: true }
     );
     if (!updatedJob) return res.status(404).json({status: -1, message: 'Job not found' });
+    await logUserAction({ req, action: "update_job"});
     res.json({status: 1, message: "Successfully", updatedJob});
   } catch (err) {
+    await logUserAction({ req, responseMessage: err.message, action: "update_job"});
     res.status(400).json({status: 0, message: err.message });
   }
 };
@@ -80,8 +85,10 @@ exports.deletePostJob = async (req, res) => {
   try {
     const deletedJob = await PostJob.findByIdAndDelete(req.params.id);
     if (!deletedJob) return res.status(404).json({status: -1, message: 'Job not found' });
+    await logUserAction({ req, action: "delete_job"});
     res.json({status: 1, message: 'Job deleted' });
   } catch (err) {
+    await logUserAction({ req, action: "delete_job"});
     res.status(500).json({status: 0, message: err.message });
   }
 };

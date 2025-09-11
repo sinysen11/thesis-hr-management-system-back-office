@@ -4,6 +4,7 @@ const User = require('../models/userModel');
 const STATUS = require('../enums/leaveStatus');
 const Mail = require('../controllers/mailController');
 const mongoose = require('mongoose');
+const { logUserAction } = require('../middlewares/activityLogger'); 
 
 exports.createLeaveRequest = async (req, res) => {
   const session = await mongoose.startSession();
@@ -63,6 +64,7 @@ exports.createLeaveRequest = async (req, res) => {
       reason: reason
     };
 
+    await logUserAction({ req, action: "create_leave_request",});
     await Mail.sendLeaveRequestMail(content);
     await leaveRequest.save({ session });
 
@@ -70,6 +72,7 @@ exports.createLeaveRequest = async (req, res) => {
     session.endSession();
     res.status(201).json({ status: 1, message: 'Leave request created', leaveRequest });
   } catch (error) {
+    await logUserAction({ req, responseMessage: error.message, action: "create_leave_request",});
     await session.abortTransaction();
     session.endSession();
     res.status(400).json({ message: error.message });
