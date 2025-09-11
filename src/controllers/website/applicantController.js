@@ -120,3 +120,18 @@ exports.resetPassword = async (req, res) => {
     res.status(400).json({ status: 0, message: err.message });
   }
 };
+
+exports.getApplicantInfo = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const applicant = await Applicant.findById(id);
+
+    if (!applicant) {
+      return res.status(404).json({ status: 0, message: 'Applicant not found' });
+    }
+
+    res.status(200).json({ status: 1, message: 'Applicant retrieved successfully', applicant });
+  } catch (err) {
+    res.status(500).json({ status: 0, message: err.message });
+  }
+};
