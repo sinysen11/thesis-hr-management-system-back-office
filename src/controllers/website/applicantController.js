@@ -100,8 +100,8 @@ exports.resetPassword = async (req, res) => {
     const { token, new_password } = req.body;
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const applicant = await Applicant.findById(decoded.id);
 
+    const applicant = await Applicant.findById(decoded.id);
     if (!applicant) {
       return res.status(400).json({ status: 0, message: "Applicant not found" });
     }
