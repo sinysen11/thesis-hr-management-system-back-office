@@ -1,24 +1,15 @@
 const nodemailer = require("nodemailer");
-const { google } = require("googleapis");
 
-const { CLIENT_ID, CLIENT_SECRET, REDIRECT_URI, REFRESH_TOKEN, EMAIL_USER } = process.env;
-
-const oAuth2Client = new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET, REDIRECT_URI);
-oAuth2Client.setCredentials({ refresh_token: REFRESH_TOKEN });
+const { EMAIL_USER, EMAIL_PASS } = process.env;
 
 async function createTransporter() {
-  const accessTokenObj = await oAuth2Client.getAccessToken();
-  const accessToken = accessTokenObj?.token || accessTokenObj;
-
   return nodemailer.createTransport({
-    service: "gmail",
+    host: "smtp.gmail.com",
+    port: 465,
+    secure: true,
     auth: {
-      type: "OAuth2",
       user: EMAIL_USER,
-      clientId: CLIENT_ID,
-      clientSecret: CLIENT_SECRET,
-      refreshToken: REFRESH_TOKEN,
-      accessToken,
+      pass: EMAIL_PASS,
     },
   });
 }
@@ -83,9 +74,9 @@ async function sendApplyJobMail(applicant_mail) {
     text: `
       Dear Applicant,
 
-      Thanks for your interest in vacacy position in SunFlex (Cambodia) Co., Ltd.
-      This is a confirmation that we have recieved your application. Our Human Resource team is reviewing your application and you will be contacted if you are qualified with position that have applied.
-      Otherwish, we will keep your application in our database for further opportunity arises which fits your credentials and experience.
+      Thanks for your interest in vacancy position in SunFlex (Cambodia) Co., Ltd.
+      This is a confirmation that we have received your application. Our Human Resource team is reviewing your application and you will be contacted if you are qualified for the position applied.
+      Otherwise, we will keep your application in our database for further opportunity arises which fits your credentials and experience.
       We wish you all the best in your career and future endeavor.
 
       Best regards,
@@ -96,10 +87,11 @@ async function sendApplyJobMail(applicant_mail) {
 }
 
 async function sendForgotPasswordMail({ email, resetLink }) {
+  console.log(email)
   const transporter = await createTransporter();
 
   const mailOptions = {
-    from: process.env.EMAIL_USER,
+    from: EMAIL_USER,
     to: email,
     subject: "Password Reset Request",
     text: `
@@ -158,4 +150,10 @@ async function sendResetPasswordConfirmationMail({ email }) {
   return transporter.sendMail(mailOptions);
 }
 
-module.exports = { sendLeaveRequestMail, sendLeaveResponseMail, sendApplyJobMail, sendForgotPasswordMail, sendResetPasswordConfirmationMail };
+module.exports = { 
+  sendLeaveRequestMail, 
+  sendLeaveResponseMail, 
+  sendApplyJobMail, 
+  sendForgotPasswordMail, 
+  sendResetPasswordConfirmationMail 
+};

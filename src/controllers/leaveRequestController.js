@@ -1,6 +1,7 @@
 const LeaveRequest = require('../models/leaveRequest');
 const LeaveBalance = require('../models/leaveBalance');
 const User = require('../models/userModel');
+const PublicHoliday = require('../models/publicHoliday');
 const STATUS = require('../enums/leaveStatus');
 const Mail = require('../controllers/mailController');
 const mongoose = require('mongoose');
@@ -16,9 +17,13 @@ exports.createLeaveRequest = async (req, res) => {
     let days = 0;
 
     if (isMorning || isNoon) {
+      const holidaySet = await getHolidayDatesSet();
+      if (isWeekendOrHoliday(new Date(fromDate), holidaySet)) {
+        throw new Error('Selected date is a weekend or public holiday');
+      }
       days = 0.5;
     } else if (isFull) {
-      days = calculateLeaveDays(fromDate, toDate);
+      days = await calculateLeaveDays(fromDate, toDate);
     } else {
       throw new Error("Invalid leave type: must specify isMorning, isNoon, or isFull");
     }
@@ -128,7 +133,7 @@ exports.getAllApprover = async (req, res) => {
       }
       : {};
 
-    const [data, total] = await Promise.all([
+    const [data] = await Promise.all([
       User.find(filter)
         .select('-password')
         .populate({
@@ -139,8 +144,7 @@ exports.getAllApprover = async (req, res) => {
         .sort({ createdAt: -1 })
         .skip((page - 1) * limit)
         .limit(limit)
-        .then(users => users.filter(u => u.role)),
-      User.countDocuments(filter)
+        .then(users => users.filter(u => u.role))
     ]);
 
     res.json({
@@ -155,7 +159,6 @@ exports.getAllApprover = async (req, res) => {
     res.status(500).json({ status: 0, message: err.message });
   }
 };
-
 
 exports.getLeaveRequestsForApprover = async (req, res) => {
   try {
@@ -215,7 +218,6 @@ exports.getLeaveRequestsForApprover = async (req, res) => {
   }
 };
 
-
 exports.updateLeaveStatus = async (req, res) => {
   try {
     const { request_id } = req.params;
@@ -235,7 +237,7 @@ exports.updateLeaveStatus = async (req, res) => {
     if (leaveRequest.isMorning || leaveRequest.isNoon) {
       totalDays = 0.5;
     } else if (leaveRequest.isFull) {
-      totalDays = calculateLeaveDays(leaveRequest.fromDate, leaveRequest.toDate);
+      totalDays = await calculateLeaveDays(leaveRequest.fromDate, leaveRequest.toDate); // async
     }
 
     leaveRequest.status = status;
@@ -274,11 +276,47 @@ exports.updateLeaveStatus = async (req, res) => {
   }
 };
 
+async function getHolidayDatesSet() {
+  const holidays = await PublicHoliday.find({}, { _id: 0, startDate: 1, endDate: 1 }).lean();
+  const holidayDates = new Set();
 
-function calculateLeaveDays(from, to) {
-  const oneDay = 24 * 60 * 60 * 1000;
-  return Math.round((new Date(to) - new Date(from)) / oneDay) + 1;
+  holidays.forEach(h => {
+    const s = new Date(h.startDate);
+    const e = new Date(h.endDate || h.startDate);
+    let d = new Date(s);
+    while (d <= e) {
+      holidayDates.add(d.toISOString().slice(0, 10));
+      d.setDate(d.getDate() + 1);
+    }
+  });
+
+  return holidayDates;
 }
+
+// check if a date is weekend or public holiday
+function isWeekendOrHoliday(dateObj, holidaySet) {
+  const day = dateObj.getDay(); // 0 = Sunday, 6 = Saturday
+  if (day === 0 || day === 6) return true;
+  const dateStr = dateObj.toISOString().slice(0, 10);
+  if (holidaySet.has(dateStr)) return true;
+  return false;
+}
+
+async function calculateLeaveDays(from, to) {
+  const start = new Date(from);
+  const end = new Date(to);
+
+  const holidaySet = await getHolidayDatesSet();
+
+  let days = 0;
+  for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+    if (isWeekendOrHoliday(new Date(d), holidaySet)) continue;
+    days++;
+  }
+
+  return days;
+}
+
 function formatDate(date) {
   if (!date) return "N/A";
   const options = { year: 'numeric', month: 'long', day: 'numeric' };

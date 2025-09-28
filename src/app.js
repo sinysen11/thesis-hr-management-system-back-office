@@ -7,6 +7,7 @@ const postRoutes = require('./routes/postRoutes');
 const departmentRoutes = require('./routes/departmentRoutes');
 const jobTitleRoutes = require('./routes/jobTitleRoutes');
 const leaveTypeRoutes = require('./routes/leaveTypeRoutes');
+const publicHolidayRoutes = require('./routes/publicHolidayRoutes')
 const leaveRoutes = require('./routes/leaveRequestRoutes');
 const roleRoutes = require('./routes/roleRoutes');
 const PositionRoutes = require('./routes/positionRoutes');
@@ -36,6 +37,7 @@ app.use('/api/leave-types', leaveTypeRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/leave-balance', userRoutes);
 app.use('/api/leave-requests', leaveRoutes);
+app.use('/api/public-holiday', publicHolidayRoutes);
 app.use('/api/position', PositionRoutes);
 app.use('/api/get-applicant', ApplicantRoutes);
 app.use('/api/leave', ReportRoutes);
