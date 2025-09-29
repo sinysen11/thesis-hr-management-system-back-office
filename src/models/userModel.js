@@ -12,7 +12,8 @@ const userSchema = new mongoose.Schema({
   department: { type: mongoose.Schema.Types.ObjectId, ref: 'Department', required: true },
   phone_number: { type: String, required: true },
   gender: { type: String, required: true },
-  dob: { type: Date, required: true}
+  dob: { type: Date, required: true},
+  status: { type: String }
 }, {
   timestamps: true
 });

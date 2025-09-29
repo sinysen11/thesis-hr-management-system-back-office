@@ -252,3 +252,23 @@ exports.changePassword = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
+exports.updateStatus = async (req, res) => {
+  try {
+    const { user_id, status } = req.body;
+
+    if (!user_id || !status) {
+      return res.status(400).json({ message: 'User ID and status are required' });
+    }
+
+    const user = await User.findById(user_id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    user.status = status;
+    await user.save();
+
+    res.json({ status: 1, message: 'User status updated successfully', data: { status: user.status } });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};

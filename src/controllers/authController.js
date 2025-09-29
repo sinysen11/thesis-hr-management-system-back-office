@@ -12,7 +12,7 @@ exports.login = async (req, res) => {
       .populate("department")
       .populate("role");
 
-    if (!user) {
+    if (!user || user.status !== 'Active') {
       await logLoginActivity({
         req,
         statusCode: 401,

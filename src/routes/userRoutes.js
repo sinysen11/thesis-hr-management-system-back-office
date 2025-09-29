@@ -7,6 +7,7 @@ const router = express.Router();
 router.post('/create', usersController.createUser);
 router.post('/update-info', usersController.updateUserInfo);
 router.post('/change-password', usersController.changePassword);
+router.post('/update-status', usersController.updateStatus);
 router.get('/', usersController.getUsers);
 router.get('/:user_id', leaveBalance.getLeaveBalanceByUserId);
 router.get('/info/:id', usersController.getUserById);
