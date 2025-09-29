@@ -1,6 +1,7 @@
 const LeaveRequest = require('../models/leaveRequest');
 const STATUS = require('../enums/leaveStatus');
-const { logUserAction } = require('../middlewares/activityLogger'); 
+const moment = require('moment');
+const { logUserAction } = require('../middlewares/activityLogger');
 
 exports.getLeaveRequestsReportForApprover = async (req, res) => {
     try {
@@ -28,10 +29,10 @@ exports.getLeaveRequestsReportForApprover = async (req, res) => {
             .populate('type')
             .populate('approver')
             .sort({ createdAt: -1 });
-        await logUserAction({ req, action: "get_leave_report",});
+        await logUserAction({ req, action: "get_leave_report", });
         res.status(200).json({ status: 1, message: 'Successfully', data });
     } catch (err) {
-        await logUserAction({ req, responseMessage: err.message, action: "get_leave_report",});
+        await logUserAction({ req, responseMessage: err.message, action: "get_leave_report", });
         res.status(500).json({ status: 0, message: err.message });
     }
 };
@@ -62,20 +63,42 @@ exports.getLeaveRequestsReport = async (req, res) => {
             data = data.filter(item => item.type && item.type.code === type);
         }
 
-        if (fromDate && toDate) {
-            data.fromDate = { $gte: moment(fromDate).startOf('day').toDate() };
-            data.toDate = { $lte: moment(toDate).endOf('day').toDate() };
+        if (fromDate || toDate) {
+            const filterStart = fromDate ? moment(fromDate).startOf('day') : moment(0);
+            const filterEnd = toDate ? moment(toDate).endOf('day') : moment();
+
+            data = data.filter(item => {
+                const leaveStart = moment(item.fromDate);
+                const leaveEnd = moment(item.toDate);
+                return leaveEnd.isSameOrAfter(filterStart) && leaveStart.isSameOrBefore(filterEnd);
+            });
         }
 
         if (name) {
-            const user = name.toLowerCase();
-            data = data.filter(item =>
-                item.user &&
-                (
-                    (item.user.first_name_en && item.user.first_name_en.toLowerCase().includes(user)) ||
-                    (item.user.last_name_en && item.user.last_name_en.toLowerCase().includes(user))
-                )
-            );
+            const searchName = name.toLowerCase().trim();
+
+            data = data.filter(item => {
+                const employee = item.user;
+                const approver = item.approver;
+
+                const checkUserMatch = (user) => {
+                    if (!user) return false;
+
+                    const firstName = user.first_name_en ? user.first_name_en.toLowerCase() : '';
+                    const lastName = user.last_name_en ? user.last_name_en.toLowerCase() : '';
+
+                    const fullName = `${firstName} ${lastName}`.trim();
+                    const reversedName = `${lastName} ${firstName}`.trim();
+
+                    const matchesIndividualName = firstName.includes(searchName) || lastName.includes(searchName);
+
+                    const matchesFullName = fullName.includes(searchName) || reversedName.includes(searchName);
+
+                    return matchesIndividualName || matchesFullName;
+                };
+
+                return checkUserMatch(employee) || checkUserMatch(approver);
+            });
         }
 
         const total = data.length;
@@ -87,7 +110,7 @@ exports.getLeaveRequestsReport = async (req, res) => {
         const report = data.slice(startIndex, endIndex);
 
         const report_date = new Date();
-        await logUserAction({ req, action: "get_leave_report",});
+        await logUserAction({ req, action: "get_leave_report", });
         res.status(200).json({
             status: 1,
             message: 'Successfully',
@@ -100,7 +123,7 @@ exports.getLeaveRequestsReport = async (req, res) => {
             data: report
         });
     } catch (err) {
-        await logUserAction({ req, responseMessage: err.message, action: "get_leave_report",});
+        await logUserAction({ req, responseMessage: err.message, action: "get_leave_report", });
         res.status(500).json({ status: 0, message: err.message });
     }
 };
