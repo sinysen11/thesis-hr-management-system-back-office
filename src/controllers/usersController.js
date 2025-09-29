@@ -207,3 +207,48 @@ exports.resetPassword = async (req, res) => {
     res.status(400).json({ status: 0, message: err.message });
   }
 };
+
+exports.updateUserInfo = async (req, res) => {
+    try {
+        const { user_id } = req.body;
+        const updateData = req.body;
+
+        const user = await User.findByIdAndUpdate(
+            user_id,
+            updateData,
+            { new: true }
+        )
+            .select('-password')
+            .populate('role')
+            .populate('department');
+
+        if (!user) return res.status(404).json({ message: 'User not found' });
+
+        res.json({ status: 1, message: 'User updated successfully', user });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
+exports.changePassword = async (req, res) => {
+  try {
+    const { user_id, oldPassword, newPassword } = req.body;
+
+    if (!user_id || !oldPassword || !newPassword) {
+      return res.status(400).json({ message: 'User ID, old password, and new password are required' });
+    }
+
+    const user = await User.findById(user_id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    const isMatch = await bcrypt.compare(oldPassword, user.password);
+    if (!isMatch) return res.status(400).json({ message: 'Old password is incorrect' });
+
+    user.password = await bcrypt.hash(newPassword, 10);
+    await user.save();
+
+    res.json({ status: 1, message: 'Password changed successfully' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
