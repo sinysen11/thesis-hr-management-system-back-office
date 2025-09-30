@@ -83,9 +83,11 @@ exports.getUsers = async (req, res) => {
         ]);
 
         res.json({
-            page,
-            limit,
-            total,
+            pagination: {
+                page,
+                limit,
+                total,
+            },
             data,
             status: 1,
             message: "Successfully"
