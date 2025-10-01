@@ -20,6 +20,15 @@ const SubmitJobSchema = new mongoose.Schema({
     knows_someone: { type: Boolean },
     knows_someone_details: { type: String },
     why_apply: { type: String },
+    status: { type: String },
+    interview: {
+        date: { type: Date },
+        time: { type: String }, 
+        location: { type: String },
+        mode: { type: String, enum: ["Onsite", "Online"], default: "Onsite" },
+        interviewers: [{ type: String }],
+        notes: { type: String }
+    },
     resume: { type: mongoose.Schema.Types.ObjectId, ref: 'Document'},
 }, {
     timestamps: true

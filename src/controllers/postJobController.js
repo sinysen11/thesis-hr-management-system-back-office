@@ -28,6 +28,7 @@ exports.getAllPostJobs = async (req, res) => {
     const data = await PostJob.find()
       .populate('title')
       .populate('department')
+      .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit);
 
