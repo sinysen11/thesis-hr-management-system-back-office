@@ -1,7 +1,6 @@
 const SubmitJob = require('../models/website/job');
 const { logUserAction } = require('../middlewares/activityLogger');
-
-// --- File: applyJobController.js ---
+const Mail = require('../controllers/mailController');
 
 exports.getAllApplyJobs = async (req, res) => {
     try {
@@ -165,6 +164,28 @@ exports.updateApplyJobStatus = async (req, res) => {
 
         if (!applyJob) {
             return res.status(404).json({ status: 0, message: "Job application not found" });
+        }
+
+        const applicantEmail = applyJob.applicant?.email;
+        const positionTitle = applyJob.jobId?.title?.des_en || 'N/A Position';
+
+        if (applicantEmail) {
+            if (status === "INTERVIEWING") {
+                const interviewDetails = {
+                    date: applyJob.interview.date,
+                    time: applyJob.interview.time,
+                    location: applyJob.interview.location,
+                    mode: interview.mode,
+                };
+                
+                await Mail.sendCallForInterviewMail(applicantEmail, positionTitle, interviewDetails)
+                    .then(() => console.log(`Interview mail sent to ${applicantEmail}`))
+                    .catch(error => console.error(`Failed to send interview mail to ${applicantEmail}:`, error));
+            } else if (status === "HIRED") {
+                await Mail.sendHiredMail(applicantEmail, positionTitle)
+                    .then(() => console.log(`Hired mail sent to ${applicantEmail}`))
+                    .catch(error => console.error(`Failed to send hired mail to ${applicantEmail}:`, error));
+            }
         }
 
         await logUserAction({

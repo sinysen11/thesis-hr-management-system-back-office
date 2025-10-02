@@ -86,6 +86,64 @@ async function sendApplyJobMail(applicant_mail) {
   return transporter.sendMail(mailOptions);
 }
 
+async function sendCallForInterviewMail(applicant_mail, position_title, interview_details) {
+  const transporter = await createTransporter();
+  const { date, time, mode, location } = interview_details || { date: 'TBD', time: 'TBD', location: 'TBD' };
+
+  const mailOptions = {
+    from: EMAIL_USER,
+    to: applicant_mail,
+    subject: `Interview Invitation - ${position_title} Position at SunFlex`,
+    text: `
+      Dear Applicant,
+
+      Thank you for applying for the ${position_title} position at SunFlex (Cambodia) Co., Ltd.
+      We're impressed with your qualifications and would like to invite you for an interview.
+
+      Interview Details:
+      Position: ${position_title}
+      Date: ${date}
+      Time: ${time}
+      Mode: ${mode}
+      Location/Method: ${location}
+
+      Please confirm your availability for this slot by replying to this email. If this time doesn't work, please suggest an alternative.
+      We look forward to meeting you.
+
+      Best regards,
+      Human Resources & Training
+    `,
+  };
+  return transporter.sendMail(mailOptions);
+}
+
+async function sendHiredMail(applicant_mail, position_title) {
+  const transporter = await createTransporter();
+
+  const mailOptions = {
+    from: EMAIL_USER,
+    to: applicant_mail,
+    subject: `Job Offer: Congratulations! You're Hired for ${position_title}`,
+    text: `
+      Dear Applicant,
+
+      Congratulations!
+
+      We are delighted to offer you the position of ${position_title} at SunFlex (Cambodia) Co., Ltd.
+      Your skills and experience were highly regarded by the interview team, and we believe you will be a valuable addition to our team.
+
+      A formal offer letter, which outlines your salary, start date, benefits, and detailed terms of employment, will be sent to you shortly.
+      Please reply to this email to acknowledge receipt of this notification.
+
+      We are excited to welcome you aboard!
+
+      Best regards,
+      Human Resources & Training
+    `,
+  };
+  return transporter.sendMail(mailOptions);
+}
+
 async function sendForgotPasswordMail({ email, resetLink }) {
   console.log(email)
   const transporter = await createTransporter();
@@ -155,5 +213,7 @@ module.exports = {
   sendLeaveResponseMail, 
   sendApplyJobMail, 
   sendForgotPasswordMail, 
-  sendResetPasswordConfirmationMail 
+  sendResetPasswordConfirmationMail,
+  sendCallForInterviewMail,
+  sendHiredMail
 };
