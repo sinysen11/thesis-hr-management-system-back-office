@@ -1,6 +1,7 @@
 const SubmitJob = require('../models/website/job');
 const { logUserAction } = require('../middlewares/activityLogger');
 const Mail = require('../controllers/mailController');
+const mongoose = require('mongoose');
 
 exports.getAllApplyJobs = async (req, res) => {
     try {
@@ -27,25 +28,81 @@ exports.getAllApplyJobs = async (req, res) => {
             }
         }
 
+        let data;
+        let total;
+
         if (position) {
-            filter.jobId = position;
+            const pipeline = [
+                { $match: filter },
+
+                {
+                    $lookup: {
+                        from: 'postjobs',
+                        localField: 'jobId',
+                        foreignField: '_id',
+                        as: 'jobDetails'
+                    }
+                },
+                { $unwind: '$jobDetails' },
+
+                {
+                    $lookup: {
+                        from: 'jobtitles',
+                        localField: 'jobDetails.title',
+                        foreignField: '_id',
+                        as: 'jobTitle'
+                    }
+                },
+                { $unwind: '$jobTitle' },
+
+                {
+                    $match: mongoose.Types.ObjectId.isValid(position)
+                        ? { 'jobTitle._id': new mongoose.Types.ObjectId(position) }
+                        : { 'jobTitle._d': position }
+                },
+
+                { $sort: { createdAt: -1 } }
+            ];
+
+            const countResult = await SubmitJob.aggregate([
+                ...pipeline,
+                { $count: "total" }
+            ]);
+            total = countResult.length > 0 ? countResult[0].total : 0;
+
+            pipeline.push({ $skip: skip }, { $limit: limit });
+
+            let aggregatedData = await SubmitJob.aggregate(pipeline);
+
+            data = await SubmitJob.populate(aggregatedData, [
+                { path: 'applicant' },
+                { path: 'resume' },
+                {
+                    path: 'jobDetails',
+                    model: 'PostJob',
+                    populate: [
+                        { path: 'title', model: 'JobTitle' },
+                        { path: 'department', model: 'Department' }
+                    ]
+                }
+            ]);
+        } else {
+            total = await SubmitJob.countDocuments(filter);
+
+            data = await SubmitJob.find(filter)
+                .populate('applicant')
+                .populate('resume')
+                .populate({
+                    path: "jobId",
+                    populate: [
+                        { path: "title", model: "JobTitle" },
+                        { path: "department", model: "Department" },
+                    ],
+                })
+                .sort({ createdAt: -1 })
+                .skip(skip)
+                .limit(limit);
         }
-
-        const total = await SubmitJob.countDocuments(filter);
-
-        const data = await SubmitJob.find(filter)
-            .populate('applicant')
-            .populate('resume')
-            .populate({
-                path: "jobId",
-                populate: [
-                    { path: "title", model: "JobTitle" },
-                    { path: "department", model: "Department" },
-                ],
-            })
-            .sort({ createdAt: -1 })
-            .skip(skip)
-            .limit(limit);
 
 
         await logUserAction({
@@ -56,7 +113,7 @@ exports.getAllApplyJobs = async (req, res) => {
 
         res.status(200).json({
             status: 1,
-            message: "Successfully",
+            message: "Successfully fetched applied jobs",
             data,
             pagination: {
                 total,
@@ -69,6 +126,7 @@ exports.getAllApplyJobs = async (req, res) => {
         res.status(500).json({ status: 0, message: error.message });
     }
 };
+
 exports.getApplyJobById = async (req, res) => {
     try {
         const { id } = req.params;
@@ -177,7 +235,7 @@ exports.updateApplyJobStatus = async (req, res) => {
                     location: applyJob.interview.location,
                     mode: interview.mode,
                 };
-                
+
                 await Mail.sendCallForInterviewMail(applicantEmail, positionTitle, interviewDetails)
                     .then(() => console.log(`Interview mail sent to ${applicantEmail}`))
                     .catch(error => console.error(`Failed to send interview mail to ${applicantEmail}:`, error));
