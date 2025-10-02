@@ -77,9 +77,17 @@ exports.getAllApplyJobs = async (req, res) => {
             data = await SubmitJob.populate(aggregatedData, [
                 { path: 'applicant' },
                 { path: 'resume' },
+                { 
+                    path: 'jobId',
+                    populate: [
+                        { path: 'title', model: 'JobTitle' },
+                        { path: 'department', model: 'Department' },
+                    ]
+                },
                 {
                     path: 'jobDetails',
                     model: 'PostJob',
+                    
                     populate: [
                         { path: 'title', model: 'JobTitle' },
                         { path: 'department', model: 'Department' }
