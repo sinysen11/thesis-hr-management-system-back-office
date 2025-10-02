@@ -1,7 +1,5 @@
 const ContentImage = require('../models/image');
 const { logUserAction } = require('../middlewares/activityLogger');
-const path = require('path');
-const fs = require('fs');
 
 exports.uploadImage = async (req, res) => {
   try {
@@ -9,15 +7,17 @@ exports.uploadImage = async (req, res) => {
     if (!file) return res.status(400).json({ status: -1, message: 'No image uploaded' });
 
     const imageDoc = new ContentImage({
-      filename: file.filename,
-      originalname: file.originalname,
-      path: file.path,
-      size: file.size
+      data: file.buffer,
+      contentType: file.mimetype
     });
     await imageDoc.save();
     await logUserAction({ req, action: "upload_image" });
 
-    res.status(200).json({ status: 1, message: 'Image uploaded successfully', data: imageDoc });
+    res.status(200).json({
+      status: 1,
+      message: 'Image uploaded successfully',
+      id: imageDoc._id
+    });
   } catch (error) {
     await logUserAction({ req, responseMessage: error.message, action: "upload_image" });
     res.status(500).json({ status: -1, message: 'Server error', error: error.message });
@@ -33,26 +33,11 @@ exports.getImageById = async (req, res) => {
       return res.status(404).json({ status: 0, message: 'Image not found' });
     }
 
-    console.log(image);
-
-    const imagePath = path.resolve(image.path);
-
-    if (!fs.existsSync(imagePath)) {
-      return res.status(404).json({ status: 0, message: 'Image file not found' });
-    }
-
-    res.sendFile(imagePath, (err) => {
-      if (err) {
-        console.error('Error sending file:', err);
-        if (!res.headersSent) {
-          res.status(500).json({ status: -1, message: 'Failed to send image' });
-        }
-      }
-    });
+    res.set('Content-Type', image.contentType);
+    res.send(image.data);
 
     await logUserAction({ req, action: 'get_image_by_id' });
   } catch (error) {
-    console.error('Error:', error);
     if (!res.headersSent) {
       res.status(500).json({ status: -1, message: 'Server error', error: error.message });
     }
