@@ -221,7 +221,7 @@ exports.getLeaveRequestsForApprover = async (req, res) => {
 exports.updateLeaveStatus = async (req, res) => {
   try {
     const { request_id } = req.params;
-    const { status } = req.body;
+    const { status, comment } = req.body;
 
     const leaveRequest = await LeaveRequest.findById(request_id)
       .populate({ path: 'user', model: 'User' })
@@ -241,6 +241,7 @@ exports.updateLeaveStatus = async (req, res) => {
     }
 
     leaveRequest.status = status;
+    leaveRequest.comment = comment;
 
     if ((status === STATUS.REJECTED || status === STATUS.CANCELLED) && isPending) {
       const leaveBalance = await LeaveBalance.findOne({

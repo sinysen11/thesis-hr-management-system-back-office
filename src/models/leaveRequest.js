@@ -10,7 +10,8 @@ const LeaveRequestSchema = new mongoose.Schema({
   status: { type: String },
   isMorning: { type: Boolean },
   isNoon: { type: Boolean },
-  isFull: { type: Boolean }
+  isFull: { type: Boolean },
+  comment: { type: String }
 }, { timestamps: true });
 
 module.exports = mongoose.model('LeaveRequest', LeaveRequestSchema);
