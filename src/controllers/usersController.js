@@ -1,5 +1,6 @@
 const bcrypt = require('bcryptjs');
 const User = require('../models/userModel');
+const Applicant = require('../models/website/applicant')
 const LeaveType = require('../models/leaveTypes');
 const LeaveBalance = require('../models/leaveBalance');
 const jwt = require('jsonwebtoken');
@@ -21,7 +22,7 @@ exports.createUser = async (req, res) => {
         const body = { ...req.body };
 
         if (!body.password) {
-            return res.status(400).json({status: -1, message: 'Password is required' });
+            return res.status(400).json({ status: -1, message: 'Password is required' });
         }
         body.password = await bcrypt.hash(body.password, 10);
 
@@ -39,7 +40,7 @@ exports.createUser = async (req, res) => {
             if (!balances) return
             await LeaveBalance.insertMany(balances);
         }
-        await logUserAction({ req, action: "create_user",});
+        await logUserAction({ req, action: "create_user", });
         res.status(201).json({
             status: 1,
             message: 'User created successfully',
@@ -47,10 +48,10 @@ exports.createUser = async (req, res) => {
         });
     } catch (err) {
         if (err?.code === 11000 && err?.keyPattern?.email) {
-            return res.status(400).json({status: 0, message: 'Email already in use' });
+            return res.status(400).json({ status: 0, message: 'Email already in use' });
         }
-        await logUserAction({ req, responseMessage: err.message, action: "create_role",});
-        res.status(400).json({status: 0, message: err.message });
+        await logUserAction({ req, responseMessage: err.message, action: "create_role", });
+        res.status(400).json({ status: 0, message: err.message });
     }
 };
 
@@ -93,7 +94,64 @@ exports.getUsers = async (req, res) => {
             message: "Successfully"
         });
     } catch (err) {
-        res.status(500).json({status: 0, message: err.message });
+        res.status(500).json({ status: 0, message: err.message });
+    }
+};
+
+exports.getApplicantUsers = async (req, res) => {
+    try {
+        const page = Math.max(parseInt(req.query.page || '1', 10), 1);
+        const limit = Math.max(parseInt(req.query.limit || '10', 10), 1);
+        const search = (req.query.search || '').trim();
+        const filter = search
+            ? {
+                $or: [
+                    { first_name: new RegExp(search, 'i') },
+                    { last_name: new RegExp(search, 'i') },
+                    { email: new RegExp(search, 'i') },
+                    { username: new RegExp(search, 'i') },
+                    {
+                        $expr: {
+                            $regexMatch: {
+                                input: { $concat: ['$first_name', ' ', '$last_name'] },
+                                regex: search,
+                                options: 'i',
+                            },
+                        },
+                    },
+                    {
+                        $expr: {
+                            $regexMatch: {
+                                input: { $concat: ['$last_name', ' ', '$first_name'] },
+                                regex: search,
+                                options: 'i',
+                            },
+                        },
+                    },
+                ],
+            } : {};
+
+        const [data, total] = await Promise.all([
+            Applicant.find(filter)
+                .select('-password')
+                .sort({ createdAt: -1 })
+                .skip((page - 1) * limit)
+                .limit(limit),
+            Applicant.countDocuments(filter),
+        ]);
+
+        res.json({
+            pagination: {
+                page,
+                limit,
+                total,
+            },
+            data,
+            status: 1,
+            message: "Successfully"
+        });
+    } catch (err) {
+        res.status(500).json({ status: 0, message: err.message });
     }
 };
 
@@ -106,7 +164,7 @@ exports.getUserById = async (req, res) => {
             .populate('department')
 
         if (!user) return res.status(404).json({ message: 'User not found' });
-        res.json({status: 1, message: "Successfully", user});
+        res.json({ status: 1, message: "Successfully", user });
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
@@ -129,8 +187,8 @@ exports.updateUser = async (req, res) => {
             .populate('role')
             .populate('department')
 
-        if (!user) return res.status(404).json({status: -1, message: 'User not found' });
-        await logUserAction({ req, action: "update_user",});
+        if (!user) return res.status(404).json({ status: -1, message: 'User not found' });
+        await logUserAction({ req, action: "update_user", });
         res.json({
             status: 1,
             message: 'User updated successfully',
@@ -138,10 +196,10 @@ exports.updateUser = async (req, res) => {
         });
     } catch (err) {
         if (err?.code === 11000 && err?.keyPattern?.email) {
-            return res.status(400).json({status: 0, message: 'Email already in use' });
+            return res.status(400).json({ status: 0, message: 'Email already in use' });
         }
-        await logUserAction({ req, responseMessage: err.message, action: "update_user",});
-        res.status(400).json({status: 0, message: err.message });
+        await logUserAction({ req, responseMessage: err.message, action: "update_user", });
+        res.status(400).json({ status: 0, message: err.message });
     }
 };
 
@@ -149,65 +207,65 @@ exports.updateUser = async (req, res) => {
 exports.deleteUser = async (req, res) => {
     try {
         const user = await User.findByIdAndDelete(req.params.id).select('-password');
-        if (!user) return res.status(404).json({status: -1, message: 'User not found' });
+        if (!user) return res.status(404).json({ status: -1, message: 'User not found' });
 
-        await logUserAction({ req, action: "delete_user",});
+        await logUserAction({ req, action: "delete_user", });
         await LeaveBalance.deleteMany({ user: user._id });
 
-        res.json({status: 1, message: 'User deleted successfully' });
+        res.json({ status: 1, message: 'User deleted successfully' });
     } catch (err) {
-        await logUserAction({ req, responseMessage: err.message, action: "delete_user",});
-        res.status(500).json({status: 0, message: err.message });
+        await logUserAction({ req, responseMessage: err.message, action: "delete_user", });
+        res.status(500).json({ status: 0, message: err.message });
     }
 };
 
 exports.forgotPassword = async (req, res) => {
-  try {
-    const { email } = req.body;
+    try {
+        const { email } = req.body;
 
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(404).json({ status: 0, message: "User not found" });
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(404).json({ status: 0, message: "User not found" });
+        }
+
+        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "4h" });
+
+        user.resetToken = token;
+        user.resetTokenExpiry = Date.now() + 3600000;
+        await user.save();
+
+        const resetLink = `${CLIENT_DOMAIN}/reset-password?token=${token}`;
+
+        await Mail.sendForgotPasswordMail({ email, resetLink });
+
+        res.json({ status: 1, message: "Password reset link sent to your email" });
+    } catch (err) {
+        res.status(500).json({ status: 0, message: err.message });
     }
-
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "4h" });
-
-    user.resetToken = token;
-    user.resetTokenExpiry = Date.now() + 3600000;
-    await user.save();
-
-    const resetLink = `${CLIENT_DOMAIN}/reset-password?token=${token}`;
-
-    await Mail.sendForgotPasswordMail({ email, resetLink });
-
-    res.json({ status: 1, message: "Password reset link sent to your email" });
-  } catch (err) {
-    res.status(500).json({ status: 0, message: err.message });
-  }
 };
 
 exports.resetPassword = async (req, res) => {
-  try {
-    const { token, new_password } = req.body;
+    try {
+        const { token, new_password } = req.body;
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.id);
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const user = await User.findById(decoded.id);
 
-    if (!user) {
-      return res.status(400).json({ status: 0, message: "User not found" });
+        if (!user) {
+            return res.status(400).json({ status: 0, message: "User not found" });
+        }
+
+        user.password = await bcrypt.hash(new_password, 10);
+        user.resetToken = undefined;
+        user.resetTokenExpiry = undefined;
+        await user.save();
+
+        await Mail.sendResetPasswordConfirmationMail({ email: user.email });
+
+        res.json({ status: 1, message: "Password reset successful" });
+    } catch (err) {
+        res.status(400).json({ status: 0, message: err.message });
     }
-
-    user.password = await bcrypt.hash(new_password, 10);
-    user.resetToken = undefined;
-    user.resetTokenExpiry = undefined;
-    await user.save();
-
-    await Mail.sendResetPasswordConfirmationMail({ email: user.email });
-
-    res.json({ status: 1, message: "Password reset successful" });
-  } catch (err) {
-    res.status(400).json({ status: 0, message: err.message });
-  }
 };
 
 exports.updateUserInfo = async (req, res) => {
@@ -233,44 +291,44 @@ exports.updateUserInfo = async (req, res) => {
 };
 
 exports.changePassword = async (req, res) => {
-  try {
-    const { user_id, oldPassword, newPassword } = req.body;
+    try {
+        const { user_id, oldPassword, newPassword } = req.body;
 
-    if (!user_id || !oldPassword || !newPassword) {
-      return res.status(400).json({ message: 'User ID, old password, and new password are required' });
+        if (!user_id || !oldPassword || !newPassword) {
+            return res.status(400).json({ message: 'User ID, old password, and new password are required' });
+        }
+
+        const user = await User.findById(user_id);
+        if (!user) return res.status(404).json({ message: 'User not found' });
+
+        const isMatch = await bcrypt.compare(oldPassword, user.password);
+        if (!isMatch) return res.status(400).json({ message: 'Old password is incorrect' });
+
+        user.password = await bcrypt.hash(newPassword, 10);
+        await user.save();
+
+        res.json({ status: 1, message: 'Password changed successfully' });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
     }
-
-    const user = await User.findById(user_id);
-    if (!user) return res.status(404).json({ message: 'User not found' });
-
-    const isMatch = await bcrypt.compare(oldPassword, user.password);
-    if (!isMatch) return res.status(400).json({ message: 'Old password is incorrect' });
-
-    user.password = await bcrypt.hash(newPassword, 10);
-    await user.save();
-
-    res.json({ status: 1, message: 'Password changed successfully' });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
 };
 
 exports.updateStatus = async (req, res) => {
-  try {
-    const { user_id, status } = req.body;
+    try {
+        const { user_id, status } = req.body;
 
-    if (!user_id || !status) {
-      return res.status(400).json({ message: 'User ID and status are required' });
+        if (!user_id || !status) {
+            return res.status(400).json({ message: 'User ID and status are required' });
+        }
+
+        const user = await User.findById(user_id);
+        if (!user) return res.status(404).json({ message: 'User not found' });
+
+        user.status = status;
+        await user.save();
+
+        res.json({ status: 1, message: 'User status updated successfully', data: { status: user.status } });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
     }
-
-    const user = await User.findById(user_id);
-    if (!user) return res.status(404).json({ message: 'User not found' });
-
-    user.status = status;
-    await user.save();
-
-    res.json({ status: 1, message: 'User status updated successfully', data: { status: user.status } });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
 };

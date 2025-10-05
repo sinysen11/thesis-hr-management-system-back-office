@@ -9,8 +9,8 @@ exports.getAllJobForWebsite = async (req, res) => {
     limit = parseInt(limit);
 
     const skip = (page - 1) * limit;
-
-    const totalJobs = await PostJob.countDocuments();
+    const filter = { close_date: { $gte: new Date() } }
+    const totalJobs = await PostJob.countDocuments(filter);
 
     const data = await PostJob.find()
       .populate('title')

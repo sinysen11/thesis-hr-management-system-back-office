@@ -1,70 +1,47 @@
 const Document = require('../models/documents');
-const fs = require('fs');
-const path = require('path');
 const { logUserAction } = require('../middlewares/activityLogger');
 
 exports.uploadDocuments = async (req, res) => {
   try {
-    const uploadDir = 'uploads/';
-    if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir);
-
-    if (req.headers['content-type'] !== 'application/pdf') {
+    if (!req.headers['content-type'] || req.headers['content-type'] !== 'application/pdf') {
       return res.status(400).json({ status: -1, message: 'Only PDF files are allowed' });
     }
 
-    const filename = Date.now() + '-' + Math.round(Math.random() * 1e9) + '.pdf';
-    const filePath = path.join(uploadDir, filename);
+    const chunks = [];
+    req.on('data', chunk => chunks.push(chunk));
 
-    const fileStream = fs.createWriteStream(filePath);
-    req.pipe(fileStream);
-
-    fileStream.on('finish', async () => {
-      const stats = fs.statSync(filePath);
+    req.on('end', async () => {
+      const fileBuffer = Buffer.concat(chunks);
+      const filename = Date.now() + '-' + Math.round(Math.random() * 1e9) + '.pdf';
 
       const doc = new Document({
         filename,
         originalname: filename,
-        path: filePath,
-        size: stats.size
+        data: fileBuffer,  // <--- save the actual PDF here
+        size: fileBuffer.length
       });
-      await logUserAction({ req, action: "upload_document",});
+
       await doc.save();
 
-      res.status(200).json({ status: 1, message: 'PDF uploaded successfully', document: doc });
+      res.status(200).json({ status: 1, message: 'PDF stored successfully', document: doc });
     });
-
-    fileStream.on('error', (err) => {
-      res.status(500).json({ status: -1, message: 'Failed to save PDF', error: err.message });
-    });
-
   } catch (error) {
-    await logUserAction({ req, responseMessage: error.message, action: "upload_document",});
-    res.status(500).json({ status: -1, message: 'Server error', error: error.message });
+    res.status(500).json({ status: -1, message: error.message });
   }
 };
+
 
 exports.getDocumentById = async (req, res) => {
   try {
     const { _id } = req.params;
     const doc = await Document.findById(_id);
-    if (!doc) return res.status(404).json({ status: -1, message: 'Document not found' });
 
-    const fs = require('fs');
-    if (!fs.existsSync(doc.path)) {
-      return res.status(404).json({ status: -1, message: 'PDF file not found on server' });
-    }
+    if (!doc) return res.status(404).json({ status: -1, message: 'Document not found' });
 
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `inline; filename="${doc.originalname}"`);
-    
-    const fileStream = fs.createReadStream(doc.path);
-    fileStream.pipe(res);
-
-    fileStream.on('error', (err) => {
-      res.status(500).json({ status: -1, message: 'Error reading PDF file', error: err.message });
-    });
-
+    res.send(doc.data); 
   } catch (error) {
-    res.status(500).json({ status: -1, message: 'Server error', error: error.message });
+    res.status(500).json({ status: -1, message: error.message });
   }
 };

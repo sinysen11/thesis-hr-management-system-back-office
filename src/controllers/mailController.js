@@ -83,7 +83,15 @@ async function sendApplyJobMail(applicant_mail) {
       Human Resources & Training
     `,
   };
-  return transporter.sendMail(mailOptions);
+  const hrMailOptions = {
+    from: EMAIL_USER,
+    to: EMAIL_USER, // hr@sunflex.com
+    subject: 'New Job Application Received',
+    text: `A new applicant has applied for a position. Applicant email: ${applicant_mail}`,
+  };
+
+  await transporter.sendMail(mailOptions);
+  return transporter.sendMail(hrMailOptions);
 }
 
 async function sendCallForInterviewMail(applicant_mail, position_title, interview_details) {

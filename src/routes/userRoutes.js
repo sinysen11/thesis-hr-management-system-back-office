@@ -4,6 +4,7 @@ const leaveBalance = require('../controllers/leaveBalanceController');
 
 const router = express.Router();
 
+router.get('/applicant-users', usersController.getApplicantUsers);
 router.post('/create', usersController.createUser);
 router.post('/update-info', usersController.updateUserInfo);
 router.post('/change-password', usersController.changePassword);
